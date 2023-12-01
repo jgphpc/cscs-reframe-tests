@@ -11,7 +11,7 @@ import copy
 
 
 base_config = {
-    'modules_system': 'lmod',
+    'modules_system': 'tmod',
     'resourcesdir': '/apps/common/UES/reframe/resources',
     'partitions': [
         {
