@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Swiss National Supercomputing Centre (CSCS/ETH Zurich)
+# Copyright 2016 Swiss National Supercomputing Centre (CSCS/ETH Zurich)
 # ReFrame Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -53,8 +53,14 @@ class NvidiaDeviceCountBase(CudaVisibleDevicesAllMixin,
 
     @run_before('run')
     def set_executable(self):
+        scheduler = self.device_count_bin.current_partition.scheduler.registered_name
+        if scheduler != 'firecrest-slurm':
+            remote_stagedir = self.device_count_bin.stagedir
+        else:
+            remote_stagedir = self.device_count_bin.build_job.remotedir
+
         self.executable = os.path.join(
-            self.device_count_bin.stagedir, self.device_count_bin.executable
+            remote_stagedir, self.device_count_bin.executable
         )
 
     @sanity_function
@@ -70,7 +76,7 @@ class NvidiaDeviceCountBase(CudaVisibleDevicesAllMixin,
 
 
 class CPE_BuildDeviceCount(BuildDeviceCountBase):
-    valid_systems = ['-uenv']
+    valid_prog_environs = ['-uenv']
 
     # FIXME: version of clang compiler and default gcc not compatible
     # with the default cudatoolkit (11.6)
@@ -78,7 +84,7 @@ class CPE_BuildDeviceCount(BuildDeviceCountBase):
     def skip_incompatible_envs_cuda(self):
         if self.current_environ.name in {'PrgEnv-cray', 'PrgEnv-gnu'}:
             self.skip(
-            f'environ {self.current_environ.name!r} incompatible with'
+            f'environ {self.current_environ.name!r} incompatible with '
             f'default cudatoolkit')
 
     @run_before('compile')
@@ -89,13 +95,15 @@ class CPE_BuildDeviceCount(BuildDeviceCountBase):
 
 
 class UENV_BuildDeviceCount(BuildDeviceCountBase):
-    valid_systems = ['-uenv']
+    valid_prog_environs = ['+uenv']
 
 
 @rfm.simple_test
 class CPE_NvidiaDeviceCount(NvidiaDeviceCountBase):
-    valid_systems = ['+nvgpu -uenv']
+    valid_systems = ['+nvgpu']
+    valid_prog_environs = ['-uenv']
     device_count_bin = fixture(CPE_BuildDeviceCount, scope='environment')
+    tags = {'production'}
 
     @run_after('setup')
     def setup_modules(self):
@@ -106,5 +114,7 @@ class CPE_NvidiaDeviceCount(NvidiaDeviceCountBase):
 
 @rfm.simple_test
 class UENV_NvidiaDeviceCount(NvidiaDeviceCountBase):
-    valid_systems = ['+nvgpu +uenv']
+    valid_systems = ['+nvgpu']
+    valid_prog_environs = ['+uenv']
     device_count_bin = fixture(UENV_BuildDeviceCount, scope='environment')
+    tags = {'production'}

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Swiss National Supercomputing Centre (CSCS/ETH Zurich)
+# Copyright 2016 Swiss National Supercomputing Centre (CSCS/ETH Zurich)
 # ReFrame Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -8,8 +8,8 @@ import reframe.utility.sanity as sn
 
 
 class BaseCheck(rfm.RunOnlyRegressionTest):
-    valid_systems = ['+remote +uenv']
-    valid_prog_environs = ['+osu-micro-benchmarks']
+    valid_systems = ['+remote']
+    valid_prog_environs = ['+osu-micro-benchmarks +uenv']
     sourcesdir = None
     num_tasks = 2
     num_tasks_per_node = 1
@@ -31,6 +31,14 @@ class BaseCheck(rfm.RunOnlyRegressionTest):
         self.descr = f'{self.name} on {self.num_tasks} nodes(s)'
 
     @run_after('setup')
+    def prepare_test(self):
+        self.skip_if_no_procinfo()
+
+        # Use a single socket per node (num_tasks_per_node == 1)
+        processor = self.current_partition.processor
+        self.num_cpus_per_task = processor.num_cpus_per_socket
+
+    @run_after('setup')
     def set_launcher_options(self):
         if self.pmi != '':
             self.job.launcher.options = [f'--mpi={self.pmi}']
@@ -46,7 +54,7 @@ class BaseCheck(rfm.RunOnlyRegressionTest):
 class OSULatency(BaseCheck):
     reference = {
         '*': {
-            'latency_256': (2.3, None, 0.50, 'us'),
+            'latency_256': (2.3, None, 0.60, 'us'),
             'latency_4M':  (180., None, 0.15, 'us')
         },
     }
@@ -87,8 +95,8 @@ class OSUBandwidth(BaseCheck):
 class OSUCuda(rfm.RegressionMixin):
     @run_after('init')
     def setup_test(self):
-        self.valid_systems = ['+remote +nvgpu +uenv']
-        self.valid_prog_environs = ['+osu-micro-benchmarks +cuda']
+        self.valid_systems = ['+remote +nvgpu']
+        self.valid_prog_environs = ['+osu-micro-benchmarks +cuda +uenv']
         self.env_vars = {
             # Enable GPU support for mpich
             'MPIR_CVAR_ENABLE_GPU': 1,

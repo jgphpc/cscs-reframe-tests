@@ -60,6 +60,7 @@ base_config = {
                 {
                     'type': 'gpu',
                     'arch': 'sm_60',
+                    'model': 'P100-PCIE-16GB',
                     'num_devices': 1
                 }
                 ],
@@ -161,35 +162,43 @@ daint_sys['name'] = 'daint'
 daint_sys['descr'] = 'Piz Daint'
 daint_sys['hostnames'] = ['daint']
 
+dom_sys = copy.deepcopy(base_config)
+dom_sys['name'] = 'dom'
+dom_sys['descr'] = 'Piz Daint tds'
+dom_sys['hostnames'] = ['dom']
 
 site_configuration = {
     'systems': [
-        daint_sys
+        daint_sys,
+        dom_sys
     ],
     'environments': [
         {
             'name': 'PrgEnv-cray',
             'modules': ['PrgEnv-cray'],
             'target_systems': ['daint', 'dom'],
+            'features': ['mpi', 'openmp']
         },
         {
             'name': 'PrgEnv-gnu',
             'modules': ['PrgEnv-gnu'],
             'target_systems': ['daint', 'dom'],
-            'prepare_cmds': ['module unload PrgEnv-cray']
+            'prepare_cmds': ['module unload PrgEnv-cray'],
+            'features': ['mpi', 'openmp'],
         },
         {
             'name': 'PrgEnv-intel',
             'modules': ['PrgEnv-intel'],
             'target_systems': ['daint', 'dom'],
-            'prepare_cmds': ['module unload PrgEnv-cray']
+            'prepare_cmds': ['module unload PrgEnv-cray'],
+            'features': ['mpi', 'openmp']
         },
         {
             'name': 'PrgEnv-nvidia',
             'modules': ['PrgEnv-nvidia'],
-            'features': ['cuda'],
+            'features': ['cuda', 'mpi', 'openmp'],
             'target_systems': ['daint', 'dom'],
-            'prepare_cmds': ['module unload PrgEnv-cray']
+            'prepare_cmds': ['module unload PrgEnv-cray'],
         }
     ],
     'general': [

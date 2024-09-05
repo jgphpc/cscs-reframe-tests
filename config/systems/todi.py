@@ -22,8 +22,7 @@ base_config = {
                 'builtin',
                 'PrgEnv-cray',
                 'PrgEnv-gnu',
-                'PrgEnv-nvidia',
-                'PrgEnv-nvhpc'
+                # 'PrgEnv-nvidia'
             ],
             'descr': 'Login nodes',
             'max_jobs': 4,
@@ -48,8 +47,6 @@ base_config = {
                 'builtin',
                 'PrgEnv-cray',
                 'PrgEnv-gnu',
-                'PrgEnv-nvidia',
-                'PrgEnv-nvhpc'
             ],
             'max_jobs': 100,
             'extras': {
@@ -82,9 +79,9 @@ base_config = {
     ]
 }
 
-base_config['name'] = 'daint'
-base_config['descr'] = 'Piz Daint vcluster'
-base_config['hostnames'] = ['daint']
+base_config['name'] = 'todi'
+base_config['descr'] = 'Piz Todi vcluster'
+base_config['hostnames'] = ['todi']
 
 site_configuration = {
     'systems': [
@@ -95,26 +92,12 @@ site_configuration = {
             'name': 'PrgEnv-cray',
             'features': ['serial', 'openmp', 'mpi', 'cuda', 'openacc', 'hdf5',
                          'netcdf-hdf5parallel', 'pnetcdf'],
-            'target_systems': ['daint'],
+            'target_systems': ['todi'],
             'modules': ['cray', 'PrgEnv-cray', 'craype-arm-grace']
         },
         {
             'name': 'PrgEnv-gnu',
-            'target_systems': ['daint'],
-            'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
-                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp'],
-            'modules': ['cray', 'PrgEnv-gnu', 'craype-arm-grace']
-        },
-        {
-            'name': 'PrgEnv-nvidia',
-            'target_systems': ['daint'],
-            'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
-                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf'],
-            'modules': ['cray', 'PrgEnv-gnu', 'craype-arm-grace']
-        },
-        {
-            'name': 'PrgEnv-nvhpc',
-            'target_systems': ['daint'],
+            'target_systems': ['todi'],
             'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
                          'hdf5', 'netcdf-hdf5parallel', 'pnetcdf'],
             'modules': ['cray', 'PrgEnv-gnu', 'craype-arm-grace']
@@ -126,7 +109,7 @@ site_configuration = {
            'options': [
                '--max-retries=1',
                '--report-file=$PWD/latest.json',
-               '-c checks/system/integration/daint.py',
+               '-c checks/system/integration/todi.py',
                '-c checks/prgenv/mpi.py',
                '-c checks/microbenchmarks/mpi/osu/osu_run.py',
                '-c checks/microbenchmarks/mpi/osu/osu_tests.py',
@@ -134,7 +117,7 @@ site_configuration = {
                '-c checks/microbenchmarks/cpu/stream/stream.py',
                '-c checks/prgenv/affinity_check.py',
            ],
-           'target_systems': ['daint'],
+           'target_systems': ['todi'],
        },
        {
            'name': 'uenv_production',
@@ -143,7 +126,7 @@ site_configuration = {
                '--report-file=$PWD/latest.json',
                '-c checks/prgenv/mpi.py',
            ],
-           'target_systems': ['daint'],
+           'target_systems': ['todi'],
        }
    ]
 }
