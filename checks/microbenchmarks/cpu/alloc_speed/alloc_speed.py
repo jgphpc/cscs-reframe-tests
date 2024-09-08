@@ -56,8 +56,8 @@ class CPE_AllocSpeedTest(AllocSpeedTestBase):
     tags = {'production', 'craype'}
 
     @run_after('setup')
-    def skip_builtin_env(self):
-        self.skip_if(self.current_environ.name.startswith('builtin'))
+    def skip_builtin_aocc_env(self):
+        self.skip_if(self.current_environ.name.startswith('PrgEnv-aocc'))
 
     @run_after('setup')
     def set_modules(self):
