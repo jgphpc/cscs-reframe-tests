@@ -10,7 +10,7 @@ import reframe.utility.sanity as sn
 class AllocSpeedTestBase(rfm.RegressionTest):
     sourcepath = 'alloc_speed.cpp'
     build_system = 'SingleSource'
-    valid_prog_environs = ['*']
+    # valid_prog_environs = ['*']
 
     @run_after('init')
     def set_descr(self):
@@ -19,7 +19,7 @@ class AllocSpeedTestBase(rfm.RegressionTest):
 
     @run_before('compile')
     def set_cxxflags(self):
-        self.build_system.cxxflags = ['-O3', '-std=c++11']
+        self.build_system.cxxflags = ['-std=c++11']
 
     @sanity_function
     def assert_4GB(self):
@@ -43,7 +43,7 @@ class AllocSpeedTestBase(rfm.RegressionTest):
         self.reference = sys_reference[self.hugepages]
 
     @performance_function('s')
-    def time(self):
+    def elapsed(self):
         return sn.extractsingle(r'4096 MB, allocation time (?P<time>\S+)',
                                 self.stdout, 'time', float)
 
@@ -51,8 +51,13 @@ class AllocSpeedTestBase(rfm.RegressionTest):
 @rfm.simple_test
 class CPE_AllocSpeedTest(AllocSpeedTestBase):
     hugepages = parameter(['no', '2M'])
-    valid_systems = ['+remote -uenv']
+    valid_systems = ['+remote +cpe']
+    valid_prog_environs = ['+cpe']
     tags = {'production', 'craype'}
+
+    @run_after('setup')
+    def skip_builtin_env(self):
+        self.skip_if(self.current_environ.name.startswith('builtin'))
 
     @run_after('setup')
     def set_modules(self):
@@ -66,5 +71,6 @@ class CPE_AllocSpeedTest(AllocSpeedTestBase):
 class UENV_AllocSpeedTest(AllocSpeedTestBase):
     hugepages = parameter(['no'])
     valid_systems = ['+remote +uenv']
+    valid_prog_environs = ['+uenv']
     tags = {'production', 'uenv'}
     build_locally = False

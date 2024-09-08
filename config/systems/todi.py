@@ -16,6 +16,8 @@ base_config = {
     'partitions': [
         {
             'name': 'login',
+            # 'features': ['ce', 'gpu', 'nvgpu', 'remote', 'scontrol', 'uenv'],
+            # 'prepare_cmds': ['uenv start prgenv-gnu/24.7:v3'],
             'scheduler': 'local',
             'time_limit': '10m',
             'environs': [
@@ -52,7 +54,7 @@ base_config = {
             'extras': {
                 'cn_memory': 825,
             },
-            'features': ['ce', 'gpu', 'nvgpu', 'remote', 'scontrol', 'uenv'],
+            'features': ['cpe', 'ce', 'gpu', 'nvgpu', 'remote', 'scontrol', 'uenv'],
             'resources': [
                 {
                     'name': 'switches',
@@ -91,7 +93,7 @@ site_configuration = {
         {
             'name': 'PrgEnv-cray',
             'features': ['serial', 'openmp', 'mpi', 'cuda', 'openacc', 'hdf5',
-                         'netcdf-hdf5parallel', 'pnetcdf'],
+                         'netcdf-hdf5parallel', 'pnetcdf', 'cpe'],
             'target_systems': ['todi'],
             'modules': ['cray', 'PrgEnv-cray', 'craype-arm-grace']
         },
@@ -99,34 +101,34 @@ site_configuration = {
             'name': 'PrgEnv-gnu',
             'target_systems': ['todi'],
             'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
-                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf'],
+                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'cpe'],
             'modules': ['cray', 'PrgEnv-gnu', 'craype-arm-grace']
         },
     ],
     'modes': [
-       {
-           'name': 'cpe_production',
-           'options': [
-               '--max-retries=1',
-               '--report-file=$PWD/latest.json',
-               '-c checks/system/integration/todi.py',
-               '-c checks/prgenv/mpi.py',
-               '-c checks/microbenchmarks/mpi/osu/osu_run.py',
-               '-c checks/microbenchmarks/mpi/osu/osu_tests.py',
-               '-c checks/microbenchmarks/cpu/alloc_speed/alloc_speed.py',
-               '-c checks/microbenchmarks/cpu/stream/stream.py',
-               '-c checks/prgenv/affinity_check.py',
-           ],
-           'target_systems': ['todi'],
-       },
-       {
-           'name': 'uenv_production',
-           'options': [
-               '--max-retries=1',
-               '--report-file=$PWD/latest.json',
-               '-c checks/prgenv/mpi.py',
-           ],
-           'target_systems': ['todi'],
-       }
-   ]
+        {
+            'name': 'cpe_production',
+            'options': [
+                '--max-retries=1',
+                '--report-file=$PWD/latest.json',
+                '-c checks/system/integration/todi.py',
+                '-c checks/prgenv/mpi.py',
+                '-c checks/microbenchmarks/mpi/osu/osu_run.py',
+                '-c checks/microbenchmarks/mpi/osu/osu_tests.py',
+                '-c checks/microbenchmarks/cpu/alloc_speed/alloc_speed.py',
+                '-c checks/microbenchmarks/cpu/stream/stream.py',
+                '-c checks/prgenv/affinity_check.py',
+            ],
+            'target_systems': ['todi'],
+        },
+        {
+            'name': 'uenv_production',
+            'options': [
+                '--max-retries=1',
+                '--report-file=$PWD/latest.json',
+                '-c checks/prgenv/mpi.py',
+            ],
+            'target_systems': ['todi'],
+        }
+    ]
 }
