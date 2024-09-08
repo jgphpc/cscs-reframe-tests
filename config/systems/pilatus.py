@@ -123,8 +123,8 @@ site_configuration = {
             'name': 'PrgEnv-intel',
             'target_systems': ['pilatus'],
             'features': ['cpe', 'serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
-                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp']
-            'modules': ['cray', 'PrgEnv-intel'],
+                         'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp'],
+            'modules': ['cray', 'PrgEnv-intel']
         },
         {
             'name': 'cpeAMD',
