@@ -70,7 +70,7 @@ base_config = {
             'extras': {
                 'cn_memory': 256,
             },
-            'features': ['remote', 'sarus', 'singularity', 'uenv'],
+            'features': ['cpe', 'remote', 'sarus', 'singularity', 'uenv'],
             'access': ['-Cmc', f'--account={osext.osgroup()}'],
             'resources': [
                 {
@@ -102,12 +102,12 @@ site_configuration = {
             'name': 'PrgEnv-aocc',
             'target_systems': ['pilatus'],
             'modules': ['cray', 'PrgEnv-aocc'],
-            'features': ['serial', 'openmp', 'mpi', 'cuda',
+            'features': ['cpe', 'serial', 'openmp', 'mpi', 'cuda',
                          'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp']
         },
         {
             'name': 'PrgEnv-cray',
-            'features': ['serial', 'openmp', 'mpi', 'cuda', 'openacc', 'hdf5',
+            'features': ['cpe', 'serial', 'openmp', 'mpi', 'cuda', 'openacc', 'hdf5',
                          'netcdf-hdf5parallel', 'pnetcdf', 'openmp', 'opencl'],
             'target_systems': ['pilatus'],
             'modules': ['cray', 'PrgEnv-cray']
@@ -115,16 +115,16 @@ site_configuration = {
         {
             'name': 'PrgEnv-gnu',
             'target_systems': ['pilatus'],
-            'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
+            'features': ['cpe', 'serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
                          'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp'],
             'modules': ['cray', 'PrgEnv-gnu']
         },
         {
             'name': 'PrgEnv-intel',
             'target_systems': ['pilatus'],
-            'modules': ['cray', 'PrgEnv-intel'],
-            'features': ['serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
+            'features': ['cpe', 'serial', 'openmp', 'mpi', 'cuda', 'alloc_speed',
                          'hdf5', 'netcdf-hdf5parallel', 'pnetcdf', 'openmp']
+            'modules': ['cray', 'PrgEnv-intel'],
         },
         {
             'name': 'cpeAMD',
