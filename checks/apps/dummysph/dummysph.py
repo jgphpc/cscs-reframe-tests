@@ -37,7 +37,7 @@ class DummySPH_Uenv_Ascent(rfm.RegressionTest):
     h5part = variable(str, value='OFF')
     datadump = variable(str, value='OFF')
     fp64 = parameter(['OFF', 'ON']) # OFF=<float>, ON=<double>
-    num_gpus = variable(int, value=4)
+    # num_gpus = variable(int, value=4)
     sourcesdir = 'https://github.com/jfavre/DummySPH.git'
     build_system = 'CMake'
     build_locally = False
@@ -61,7 +61,8 @@ class DummySPH_Uenv_Ascent(rfm.RegressionTest):
             f'-DCAN_DATADUMP={self.datadump}',
             f'-DSPH_DOUBLE={self.fp64}',
             '-DINSITU=Ascent',
-            '-DAscent_DIR=/user-environment/env/default/lib/cmake',
+            # '-DAscent_DIR=/user-environment/env/default/lib/cmake',
+            '-DAscent_DIR=/capstor/scratch/cscs/jfavre/Ascent-cuda/install/ascent-checkout/lib/cmake',
         ]
 
     @run_before('run')
@@ -69,50 +70,8 @@ class DummySPH_Uenv_Ascent(rfm.RegressionTest):
         self.job.options = [f'--nodes=1']
         in_dir = '/capstor/store/cscs/userlab/vampir'
         out_dir = '/dev/shm/$USER'
-#del         tipsy_flag = f'--tipsy {self.tipsy_file}'
         self.rpt = 'rpt'
-#del         self.prerun_cmds += [
-#del             # --- 0:
-#del             f'(mkdir -p 0 ;cd 0; CUDA_VISIBLE_DEVICES=0 {self.exe} &> {self.rpt} ; cd ..) &',
-#del             # --- 1:
-#del             f'(mkdir -p 1 ;cd 1 ;'
-#del             f'ln -s ../Ascent_yaml/pseudocolor/ascent_actions.yaml ;'
-#del             f'CUDA_VISIBLE_DEVICES=1 {self.exe} &> {self.rpt} ; cd ..) &',
-#del             # --- 2:
-#del             f'(mkdir -p 2 ;cd 2 ;'
-#del             f'ln -s ../Ascent_yaml/hdf5/* . ;'
-#del             f'CUDA_VISIBLE_DEVICES=2 {self.exe} &> {self.rpt} ; cd ..) &',
-#del         ]
-#del         if self.aos == 'ON':
-#del             args = f'--tipsy {self.tipsy_file} &> {self.rpt}'
-#del             self.prerun_cmds += [
-#del                 # --- 3: (-cuda)
-#del                 f'(mkdir -p 3 ;cd 3 ;'
-#del                 f'ln -s ../Ascent_yaml/tipsy_box/ascent_actions.yaml . ;'
-#del                 f'cp /capstor/store/cscs/userlab/vampir/{self.tipsy_file} . ;'
-#del                 f'CUDA_VISIBLE_DEVICES=0 {self.exe} {args} ; cd ..) &',
-#del                 # TODO: jfrog
-#del                 # ---
-#del                 'wait'
-#del             ]
-#del         else:
-#del             self.prerun_cmds += ['wait']
 
-#del        if self.tipsy and self.fp64 == 'OFF':
-#del        # and self.aos == 'ON':
-#del            # TODO: jfrog
-#del            self.prerun_cmds += [
-#del                f'ln -s {in_dir}/{self.tipsy_file} .',
-#del                #
-#del                f'{self.exe} {tipsy_flag} --rendering {out_dir}/image+t'
-#del                f' &> {self.rpt}+rt &',
-#del                f'{self.exe} {tipsy_flag} --thresholding {out_dir}/threshold+t'
-#del                f' &> {self.rpt}+tt &',
-#del                f'{self.exe} {tipsy_flag} --compositing {out_dir}/composite+t'
-#del                f' &> {self.rpt}+ct &',
-#del                f'{self.exe} {tipsy_flag} --histsampling {out_dir}/histsampl+t'
-#del                f' &> {self.rpt}+ht &',
-#del            ]
         self.prerun_cmds += [
             f'mkdir -p {out_dir}',
             # separate dirs to avoid overwriting simple_trigger_actions.yaml:
@@ -243,6 +202,9 @@ class DummySPH_Uenv_VTKm(rfm.RegressionTest):
             f'-DSPH_DOUBLE={self.fp64}',
             '-DINSITU=VTK-m',
             '-DVTKm_DIR=`find /user-environment/ -name "vtkm-2.2" |grep -m1 cmake`',
+            # '-DVTKm_DIR=/user-environment/ParaView-5.13/lib64/cmake/paraview-5.13/vtk/vtkm',
+            #OK: '-DVTKm_DIR=/capstor/scratch/cscs/jfavre/Ascent-cuda/install/vtk-m-v2.2.0/lib/cmake/vtkm-2.2',
+            '-DCMAKE_CXX_FLAGS="-DVTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG=1"',
         ]
 
     @run_before('run')
