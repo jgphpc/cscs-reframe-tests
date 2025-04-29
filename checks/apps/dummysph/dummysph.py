@@ -335,6 +335,7 @@ class DummySPH_Uenv_VTKm(rfm.RegressionTest):
 @rfm.simple_test
 class DummySPH_Uenv_Build(rfm.CompileOnlyRegressionTest):
     """
+    UENV=insitu_ascent/develop:1753161369 \
     ./R -c cscs-reframe-tests.git/checks/apps/dummysph/dummysph.py -n DummySPH_Uenv_Build -r --system santis:login
     """
     valid_systems = ['santis']
@@ -345,7 +346,8 @@ class DummySPH_Uenv_Build(rfm.CompileOnlyRegressionTest):
     # sourcesdir = 'https://github.com/jfavre/DummySPH.git'
     sourcesdir = 'https://github.com/jgphpc/DummySPH.git'
     version = variable(str, value='build')  # main
-    insitu = parameter(['ascent'])
+    insitu = parameter(['vtkm'])
+    # insitu = parameter(['ascent'])
     # insitu = parameter(['vtkm', 'ascent'])
     aos = parameter(['OFF', 'ON'])
     # ON = struct tipsy (AOS) / OFF = std::vector (SOA)
