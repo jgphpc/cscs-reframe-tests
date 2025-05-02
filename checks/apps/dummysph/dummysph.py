@@ -343,22 +343,25 @@ class DummySPH_Uenv_Build(rfm.CompileOnlyRegressionTest):
     #valid_prog_environs = ['+uenv +ascent -cuda', '+uenv +ascent +cuda']
     valid_prog_environs = ['*']
     #
-    # sourcesdir = 'https://github.com/jfavre/DummySPH.git'
-    sourcesdir = 'https://github.com/jgphpc/DummySPH.git'
-    version = variable(str, value='build')  # main
+    # --- jf
+    sourcesdir = 'https://github.com/jfavre/DummySPH.git'
+    version = variable(str, value='main')
+    # --- jg
+    # sourcesdir = 'https://github.com/jgphpc/DummySPH.git'
+    # version = variable(str, value='build')  # main
     insitu = parameter(['vtkm'])
     # insitu = parameter(['ascent'])
     # insitu = parameter(['vtkm', 'ascent'])
     aos = parameter(['OFF', 'ON'])
     # ON = struct tipsy (AOS) / OFF = std::vector (SOA)
-    tipsy = variable(str, value='ON')
-    tipsy_file = variable(str, value='hr8799_bol_bd1.017300')
+    # tipsy = variable(str, value='ON')
+    tipsy_file = variable(str, value='hr8799_bol_bd1.017300')  # https://zenodo.org/records/14930509
     h5part_file = variable(str, value='/capstor/scratch/cscs/piccinal/santis/sk/dump_wind-shock.h5')
-    h5part = variable(str, value='ON')
+    # h5part = variable(str, value='ON')
     datadump = variable(str, value='OFF')
     fp64 = parameter(['OFF', 'ON']) # OFF=<float>, ON=<double>
     num_gpus = variable(int, value=4)
-    uenv_sqfs = variable(str, value='insitu_ascent/develop:1753161369')
+    uenv_sqfs = variable(str, value='insitu_ascent/develop_gcc13:1792256483')
     uenv_view = variable(str, value='default')
     build_system = 'CMake'
     # build_locally = False
@@ -396,29 +399,52 @@ class DummySPH_Uenv_Build(rfm.CompileOnlyRegressionTest):
             # '-DCMAKE_BUILD_TYPE=Release',
             '-DCMAKE_CUDA_ARCHITECTURES=90',
             f'-DSTRIDED_SCALARS={self.aos}',
-            f'-DCAN_LOAD_TIPSY={self.tipsy}',
-            f'-DCAN_LOAD_H5Part={self.h5part}',
+            # f'-DCAN_LOAD_TIPSY={self.tipsy}',
+            # f'-DCAN_LOAD_H5Part={self.h5part}',
             f'-DCAN_DATADUMP={self.datadump}',
             f'-DSPH_DOUBLE={self.fp64}',
             f'-DINSITU={cmake_insitu}',
-            f'-DVTKm_DIR=`find /user-environment/ -name vtkm-2.2 |grep -m1 cmake`',
-            f'-DAscent_DIR={self.ascentdir}',
+            # f'-DVTKm_DIR=`find /user-environment/ -name vtkm-2.2 |grep -m1 cmake`',
+            # f'-DAscent_DIR={self.ascentdir}',
             # '-DVTKm_DIR=/user-environment/ParaView-5.13/lib64/cmake/paraview-5.13/vtk/vtkm',
             #OK: '-DVTKm_DIR=/capstor/scratch/cscs/jfavre/Ascent-cuda/install/vtk-m-v2.2.0/lib/cmake/vtkm-2.2',
             # '-DCMAKE_CXX_FLAGS="-DVTKM_NO_ERROR_ON_MIXED_CUDA_CXX_TAG=1"',
         ]
+
+        self.build_system.config_opts += [
+            '-DCAN_LOAD_TIPSY=ON',
+            '-DCAN_LOAD_H5Part=ON',
+            # OK:
+            # UENV=insitu_ascent/develop:1753161369 ./R -c cscs-reframe-tests.git/checks/apps/dummysph/dummysph.py --system santis:login -r
+            '-DVTKm_DIR=`find /user-environment/ -name vtkm-2.2 |grep -m1 cmake`' if self.insitu == 'vtkm' else
+
+            # KO:
+            # UENV=prgenv-gnu/24.11:v2 ./R -c cscs-reframe-tests.git/checks/apps/dummysph/dummysph.py --system santis:login -r
+            # f'-DCMAKE_CUDA_HOST_COMPILER=`which gcc` -DVTKm_DIR=/capstor/scratch/cscs/jfavre/Ascent-cuda/install/vtk-m-v2.2.0/lib/cmake/vtkm-2.2' if self.insitu == 'vtkm' else
+
+            f'-DAscent_DIR={self.ascentdir}',
+        ]
+
+#         self.build_system.config_opts += [
+#             f'-DCAN_LOAD_TIPSY=ON' if self.insitu == 'vtkm' else
+#             f'-DCAN_LOAD_H5Part=ON'
+#             # f'-DCAN_LOAD_TIPSY=ON  -DCAN_LOAD_H5Part=OFF' if self.insitu == 'vtkm' else
+#             # f'-DCAN_LOAD_TIPSY=OFF -DCAN_LOAD_H5Part=ON'
+#         ]
+
         cmake_1 = ",".join(self.build_system.config_opts).replace(",", " ")
         tipsy_flag = f'--tipsy {self.tipsy_file}'
         h5part_flag = f'--h5part {self.h5part_file}'
         in_dir = '/capstor/store/cscs/userlab/vampir'
         out_dir = f'/dev/shm/$USER/INSITU_{self.insitu}_STRIDED_SCALARS_{self.aos}-SPH_DOUBLE_{self.fp64}'
+        # visible = 
         self.prebuild_cmds += [
             f'ln -fs $PWD ../INSITU_{self.insitu}_STRIDED_SCALARS_{self.aos}-SPH_DOUBLE_{self.fp64}',
             f"echo 'export CMAKE_PREFIX_PATH=`find /user-environment/ -name cmake |grep hdf5 |grep -v spack`:$CMAKE_PREFIX_PATH' > 0.sh",
             f"echo cmake '{cmake_1}' -B build -S src '2>&1' >> 0.sh",
             f"echo cmake --build build -v '2>&1' >> 0.sh",
             f'chmod 700 ./0.sh',
-            f'uenv run --view={self.uenv_view} {self.uenv_sqfs} -- ./0.sh',
+            f'uenv run --view={self.uenv_view} {self.uenv_sqfs} -- ./0.sh &> 0',
             #
             f'ln -s build/bin/dummysph_*',
             ## f'ldd dummysph_* |grep found',
@@ -426,10 +452,25 @@ class DummySPH_Uenv_Build(rfm.CompileOnlyRegressionTest):
             f'mkdir -p {out_dir}',
             #
             # f'echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/user-environment/env/default/lib" > 1.sh',
-            f'echo "./dummysph_vtkm {tipsy_flag} --rendering {out_dir}/image+t" > 1.sh' if self.insitu == 'vtkm' else f'echo "./dummysph_ascent {h5part_flag} --rendering {out_dir}/image+t" > 1.sh',
-            f'chmod 700 ./1.sh',
-            f'uenv run --view={self.uenv_view} {self.uenv_sqfs} -- ./1.sh',
-            f'mv {out_dir}/image+t* .',
+            ## f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_vtkm {tipsy_flag} --rendering {out_dir}/image+t" > 1.sh' if self.insitu == 'vtkm'
+            ## else f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_ascent {h5part_flag} --rendering {out_dir}/image+t" > 1.sh',
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {tipsy_flag} --rendering {out_dir}/tipsy+r" > 1.sh',
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {h5part_flag} --rendering {out_dir}/h5+r" > 2.sh',
+            #
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {tipsy_flag} --thresholding {out_dir}/tipsy+t" > 1t.sh',
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {h5part_flag} --thresholding {out_dir}/h5+t" > 2t.sh',
+            #
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {tipsy_flag} --compositing {out_dir}/tipsy+c" > 1c.sh',
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {h5part_flag} --compositing {out_dir}/h5+c" > 2c.sh',
+            #
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {tipsy_flag} --histsampling {out_dir}/tipsy+h" > 1h.sh',
+            f'echo "CUDA_VISIBLE_DEVICES=0,1,2,3 ./dummysph_{self.insitu} {h5part_flag} --histsampling {out_dir}/h5+h" > 2h.sh',
+            #
+            f'chmod 700 ./*.sh',
+            f'uenv run --view={self.uenv_view} {self.uenv_sqfs} -- ./1.sh &> 1',
+            f'uenv run --view={self.uenv_view} {self.uenv_sqfs} -- ./2.sh &> 2',
+            #
+            f'mv {out_dir}/image+* .',
             #
             'exit 0',
 # uenv run /capstor/scratch/cscs/piccinal/.uenv-images/images/f710fb44b74e96d501e91ae2fa7f52d2c2c95c29db036683fab5e9f2e15f8bb2/store.squashfs -v default -- ./rfm_build.sh
