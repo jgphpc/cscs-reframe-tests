@@ -80,38 +80,106 @@ site_configuration = {
             'name': 'maintenance',
             'options': [
                 '--unload-module=reframe',
-                '--exec-policy=async',
                 '-Sstrict_check=1',
                 '--output=$SCRATCH/regression/maintenance',
                 '--perflogdir=$SCRATCH/regression/maintenance/logs',
                 '--stage=$SCRATCH/regression/maintenance/stage',
                 '--report-file=$SCRATCH/regression/maintenance/reports/maint_report_{sessionid}.json',
                 '--save-log-files',
+                '-p \'(?!PrgEnv-ce)\'',
                 '--tag=maintenance',
-                '--timestamp=%F_%H-%M-%S'
+                '--timestamp=%F_%H-%M-%S',
             ]
         },
         {
             'name': 'production',
             'options': [
                 '--unload-module=reframe',
-                '--exec-policy=async',
                 '-Sstrict_check=1',
                 '--output=$SCRATCH/regression/production',
                 '--perflogdir=$SCRATCH/regression/production/logs',
                 '--stage=$SCRATCH/regression/production/stage',
                 '--report-file=$SCRATCH/regression/production/reports/prod_report_{sessionid}.json',
                 '--save-log-files',
+                '-p \'(?!PrgEnv-ce)\'',
                 '--tag=production',
                 '--timestamp=%F_%H-%M-%S'
             ]
-        }
+        },
+        {
+           'name': 'cpe_production',
+           'options': [
+               '-Sstrict_check=1',
+               '--max-retries=1',
+               '--report-file=$PWD/latest.json',
+               '-c checks',
+               '-p \'(?!PrgEnv-ce)\'',
+               '--tag=production',
+           ]
+        },
+        {
+            'name': 'cpe_ce_production',
+            'options': [
+                '--max-retries=1',
+                '--report-file=$PWD/latest.json',
+                '-c ../cscs-reframe-tests/checks/',
+                '--tag=production',
+                '-p PrgEnv-ce'
+            ],
+        },
+        {
+           'name': 'uenv_production',
+           'options': [
+               '-Sstrict_check=1',
+               '--max-retries=1',
+               '--report-file=$PWD/latest.json',
+               '-c checks/apps',
+               '-c checks/libraries',
+               '-p \'(?!PrgEnv-ce)\'',
+               '--tag=production'
+           ]
+        },
+        {
+            'name': 'appscheckout_flexible',
+            'options': [
+                '--unload-module=reframe',
+                '-Sstrict_check=1',
+                '--output=$SCRATCH/regression/production',
+                '--perflogdir=$SCRATCH/regression/production/logs',
+                '--stage=$SCRATCH/regression/production/stage',
+                '--report-file=$SCRATCH/regression/production/reports/prod_report_{sessionid}.json',
+                '--save-log-files',
+                '--tag=appscheckout',
+                '--tag=flexible',
+                '--flex-alloc-nodes=all',
+               '-p \'(?!PrgEnv-ce)\'',
+                '--timestamp=%F_%H-%M-%S'
+            ]
+        },
+        {
+            'name': 'appscheckout_distributed',
+            'options': [
+                '--unload-module=reframe',
+                '-Sstrict_check=1',
+                '--output=$SCRATCH/regression/production',
+                '--perflogdir=$SCRATCH/regression/production/logs',
+                '--stage=$SCRATCH/regression/production/stage',
+                '--report-file=$SCRATCH/regression/production/reports/prod_report_{sessionid}.json',
+                '--save-log-files',
+                '--tag=appscheckout',
+                '--exclude-tag=flexible',
+                '--distribute=all',
+                '-p \'(?!PrgEnv-ce)\'',
+                '--timestamp=%F_%H-%M-%S'
+            ]
+        },
     ],
     'general': [
         {
             'check_search_path': ['checks/'],
             'check_search_recursive': True,
-            'remote_detect': True
+            'remote_detect': True,
+            'resolve_module_conflicts': False
         }
     ],
 #     'autodetect_methods': [
