@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # ASCENT
 git clone https://github.com/jfavre/DummySPH DummySPH.git
 
