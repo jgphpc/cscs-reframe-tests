@@ -18,7 +18,6 @@ H5=ON
 /user-environment/linux-sles15-neoverse_v2/gcc-12.4.0/cmake-3.30.5-boxxe6q7f3upqh6bbo4wawwhs7a5c7yr/bin/cmake \
     -DCMAKE_C_COMPILER=mpicc \
     -DCMAKE_CXX_COMPILER=mpicxx \
-    -DCMAKE_CUDA_ARCHITECTURES=90 \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCAN_DATADUMP=OFF \
     -DSTRIDED_SCALARS=$AOS \
@@ -29,6 +28,8 @@ H5=ON
     -B build+catalyst-$AOS-$DBL-$TIPSY-$H5 \
     -DINSITU=Catalyst \
     -Dcatalyst_DIR=$catalyst_DIR \
+
+# -DCMAKE_CUDA_ARCHITECTURES=90 \
 
 cmake --build build+catalyst-$AOS-$DBL-$TIPSY-$H5
 
