@@ -1,6 +1,6 @@
-# ASCENT
+# VTKm
 
-git clone https://github.com/jfavre/DummySPH DummySPH.git
+- git clone https://github.com/jfavre/DummySPH DummySPH.git
 
 ## UENV
 
@@ -15,9 +15,9 @@ uenv start -v default insitu_ascent/develop_gcc13:1802669257
 ```
 export CMAKE_PREFIX_PATH=`find /user-environment/ -name cmake |grep hdf5 |grep -v spack`:$CMAKE_PREFIX_PATH
 export CPATH=/user-environment/env/default/include
-insitu_flags="-DINSITU=Ascent -DAscent_DIR=/user-environment/env/default/lib/cmake"
+insitu_flags="-DINSITU=VTK-m -DVTKm_DIR=`find /user-environment/ -name vtkm-2.2 |grep -m1 cmake`"
 
-INSITU=Ascent
+INSITU=VTK-m
 AOS=ON
 DBL=OFF
 TIPSY=ON
@@ -44,11 +44,11 @@ cmake --build build+$INSITU-$AOS-$DBL-$TIPSY-$H5
 ```
 rm -fr /dev/shm/piccinal/* *.yaml datasets
 CUDA_VISIBLE_DEVICES=1 \
-    ./build+Ascent-ON-OFF-ON-OFF/bin/dummysph_ascent \
+    ./build+VTK-m-ON-OFF-ON-OFF/bin/dummysph_vtkm \
     --tipsy /capstor/store/cscs/userlab/vampir/hr8799_bol_bd1.017300 --rendering /dev/shm/eff
 ```
 
-will fail with:
+will `pass` with:
 
 ```
 147dummydata = 0 H5PartFileName =
@@ -62,23 +62,17 @@ nstar  : 2
 swapped endian: 1
 free(sph)...
 TipsyReader: releasing all resources
-# pre-initialization: 6.655e-06s / MemFree = 464716992 / MemAvailable = 551737536 / MemTotal = 895967296 kB
-Creating output folder: datasetstime: 0 cycle: 0
-Conduit Blueprint check found interleaved coordinates
-AscentInitialize
-# post-initialization: 1.06878s / MemFree = 463783040 / MemAvailable = 550803584 / MemTotal = 895967296 kB
-[Error] Ascent::execute
-file: /tmp/jenkssl/spack-stage/spack-stage-ascent-git.4da1379602c44f72d587a1c7efa8856197ae87df_develop-xzeetemryhvvbqkfkcbwkagavgdk5iez/spack-src/src/libs/ascent/runtimes/ascent_main_runtime.cpp
-line: 2236
-message:
-Execution failed with vtkm: Could not find appropriate cast for array in CastAndCall.
-Array: valueType=f storageType=N4vtkm4cont16StorageTagStrideE 30766061 values occupying 123064244 bytes [3.91332e-15 3.64001e-13 1.58098e-14 ... 4.06466e-15 1.23443e-14 2.2816e-14]
-TypeList: N4vtkm4ListIJfdEEE
+# pre-initialization: 5.0462e-05s / MemFree = 455233792 / MemAvailable = 550483456 / MemTotal = 895967296 kB
+VTK-m::Initialize
+forcing DeviceAdapterTagCuda
+creating fields with strided access
+copying single block data to device
+VTK-mInitialize
+# post-initialization: 0.884177s / MemFree = 452081728 / MemAvailable = 547331264 / MemTotal = 895967296 kB
+written image to disk: /dev/shm/eff.00.0001.png
+# post-exec: 0.312716s / MemFree = 451275456 / MemAvailable = 546547904 / MemTotal = 895967296 kB
+VTK-mFinalize
+Shutting down VTK-m at end of processing
 
-(Stack trace unavailable)
-
-# post-exec: 0.900533s / MemFree = 463593344 / MemAvailable = 550640768 / MemTotal = 895967296 kB
-AscentFinalize
+--> /dev/shm/eff.00.0001.png
 ```
-
-- https://github.com/Alpine-DAV/ascent/issues/1468
