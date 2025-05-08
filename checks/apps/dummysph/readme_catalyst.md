@@ -3,9 +3,16 @@
 # CATALYST
 git clone https://github.com/jfavre/DummySPH DummySPH.git
 
+## UENV
+
+```
 uenv image pull service::paraview/5.13.3:1802853997
 uenv start -v default paraview/5.13.3:1802853997  # no cuda
+```
 
+## BUILD
+
+```
 ROOTD=/user-environment/linux-sles15-neoverse_v2/gcc-12.4.0/libcatalyst-2.0.0-2vzaznynvw5guggyeuz74uidbilpxode
 export catalyst_DIR=$ROOTD/lib64/cmake/catalyst-2.0
 export CATALYST_IMPLEMENTATION_PATHS=$ROOTD/../paraview-git.d9100e04f9558222bbb48852d03035638812549b_master-jzsvsbr3d4exbmb2jper3mhmbjiaf6ha/lib64/catalyst
@@ -32,12 +39,19 @@ H5=ON
 # -DCMAKE_CUDA_ARCHITECTURES=90 \
 
 cmake --build build+catalyst-$AOS-$DBL-$TIPSY-$H5
+```
 
+## RUN
+
+```
 export CATALYST_IMPLEMENTATION_NAME=paraview
 unset MPICH_GPU_SUPPORT_ENABLED
 ./build+catalyst-OFF-OFF-OFF-ON/bin/dummysph_catalystV2 \
     --catalyst ./DummySPH.git/ParaView_scripts/catalyst_clipping.py \
     --h5part /capstor/store/cscs/userlab/vampir/dump_wind-shock.h5
+```
+
+will give:
 
 ```
 147dummydata = 0 H5PartFileName = /capstor/store/cscs/userlab/vampir/dump_wind-shock.h5
@@ -53,14 +67,17 @@ CatalystInitialize
 (   1.221s) [pvbatch         ]vtkSMColorMapEditorHelp:706   WARN| Could not determine array range.
 (   1.239s) [pvbatch         ]vtkSMColorMapEditorHelp:706   WARN| Could not determine array range.
 # post-exec: 1.55144s / MemFree = 549910336 / MemAvailable = 582342464 / MemTotal = 895967360 kB
-```
+
 
 ls -lh datasets/
 drwxr-x---+ 2 piccinal csstaff 4.0K May  6 16:11 dataset_000000
 -rw-r-----+ 1 piccinal csstaff  975 May  6 16:11 dataset_000000.vtpd
 -rw-r-----+ 1 piccinal csstaff  32K May  6 16:11 RenderView1_000000.png
+```
 
+## VERSIONS
 
+```
 - paraview@git.d9100e04f9558222bbb48852d03035638812549b=master
 pvpython --version # paraview version 5.13.3
 
@@ -70,8 +87,8 @@ info = GetOpenGLInformation(servermanager.vtkSMSession.RENDER_SERVER);
 print('Vendor:   %s' % info.GetVendor());
 print('Version:  %s' % info.GetVersion());
 print('Renderer: %s' % info.GetRenderer())"
-```
-Vendor:   NVIDIA Corporation
-Version:  4.6.0 NVIDIA 550.54.15
-Renderer: NVIDIA GH200 120GB/PCIe
+
+    Vendor:   NVIDIA Corporation
+    Version:  4.6.0 NVIDIA 550.54.15
+    Renderer: NVIDIA GH200 120GB/PCIe
 ```
