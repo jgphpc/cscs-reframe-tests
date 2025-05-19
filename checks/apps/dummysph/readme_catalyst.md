@@ -90,3 +90,6 @@ print('Renderer: %s' % info.GetRenderer())"
     Version:  4.6.0 NVIDIA 550.54.15
     Renderer: NVIDIA GH200 120GB/PCIe
 ```
+
+- https://catalyst-in-situ.readthedocs.io/en/latest/introduction.html
+- https://docs.paraview.org/en/latest/Catalyst/index.html

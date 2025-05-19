@@ -7,6 +7,7 @@ git clone https://github.com/jfavre/DummySPH DummySPH.git
 ```
 uenv image pull service::insitu_ascent/develop_gcc13:1802669257  # DAINT
 uenv start -v default insitu_ascent/develop_gcc13:1802669257
+uenv start -v default insitu_ascent/develop_gcc13:1802669257@daint # SANTIS
 ```
 # cd /capstor/scratch/cscs/piccinal/santis/jf/tests/JG2/
 
