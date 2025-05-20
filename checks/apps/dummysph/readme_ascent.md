@@ -4,12 +4,31 @@ git clone https://github.com/jfavre/DummySPH DummySPH.git
 
 ## UENV
 
+### GCC@12
+```
+uenv image pull service::insitu_ascent/develop:1825576142@santis
+uenv start -v default insitu_ascent/develop:1825576142
+# ascent-git.4da1379602c44f72d587a1c7efa8856197ae87df_develop-wj4i3pawi2gwzg6flzzv7auhjjysauqj
+# conduit-0.9.3-3qq7inzqm6iom2z5vxzeco2zjqakvhdg
+# cray-mpich-8.1.32-pwbwqkkiefxg3pjrexzzsddija5a2osl
+# cuda-12.4.0-cepa76gll2rqskj5enc2vhiwlu77lbuj
+# gcc-12.4.0-luk65ma5h6va2xr7teq5bv4l7h4ao2pf
+# libcatalyst-2.0.0-a5nvuxrggph7t4k3aapzchzt2rx5qeni
+# occa-2.0.0-l54h47sebfrn6rdawwhkfqnghjvbv75p
+# vtk-m-2.2.0-e73vfznhwuhwbipyjyhzll3ayvi7drbw
+find /user-environment/linux-sles15-neoverse_v2/ -name AscentConfig.cmake -exec grep -m1 ASCENT_CUDA_ENABLED {} \; # ON
+```
+
+### GCC@13
 ```
 uenv image pull service::insitu_ascent/develop_gcc13:1802669257  # DAINT
 uenv start -v default insitu_ascent/develop_gcc13:1802669257
 uenv start -v default insitu_ascent/develop_gcc13:1802669257@daint # SANTIS
+
+grep -m1 ASCENT_CUDA_ENABLED /user-environment/linux-sles15-neoverse_v2/gcc-13.3.0/ascent-git.4da1379602c44f72d587a1c7efa8856197ae87df_develop-xzeetemryhvvbqkfkcbwkagavgdk5iez/lib/cmake/ascent/AscentConfig.cmake # ON
 ```
-# cd /capstor/scratch/cscs/piccinal/santis/jf/tests/JG2/
+
+- cd /capstor/scratch/cscs/piccinal/santis/jf/tests/JG2/
 
 ## BUILD
 
