@@ -17,7 +17,7 @@ DBL=$2      # OFF
 TIPSY=$3    # OFF
 H5=$4       # ON
 
-if [ "$5" = "b" ] ;then
+if [ -z "$5" ] ;then
 /user-environment/env/default/bin/cmake \
     -DCMAKE_C_COMPILER=mpicc \
     -DCMAKE_CXX_COMPILER=mpicxx \
@@ -42,9 +42,9 @@ export CATALYST_IMPLEMENTATION_NAME=paraview
 unset MPICH_GPU_SUPPORT_ENABLED
 
 EXE=./build+$INSITU-$AOS-$DBL-$TIPSY-$H5/bin/dummysph_catalystV2
-
+# EXE="./ddt-client ./build+$INSITU-$AOS-$DBL-$TIPSY-$H5/bin/dummysph_catalystV2"
 echo EXE=$EXE
-# for ii in --rendering --compositing --thresholding --histsampling --dumping --binning ;do
+
 if [ $TIPSY = "ON" ]; then flags="--tipsy /capstor/store/cscs/userlab/vampir/hr8799_bol_bd1.017300" ;fi
 if [ $H5 = "ON" ]; then     flags="--h5part /capstor/store/cscs/userlab/vampir/dump_wind-shock.h5" ;fi
 
@@ -55,4 +55,7 @@ CUDA_VISIBLE_DEVICES=$5 \
     $6 $7 $8
 #EOF
 echo done
+
+# see results in readme.sh
+
 fi
