@@ -1,6 +1,5 @@
 # ReFrame test suite of CSCS
 
-
 The tests are daily checked against the tip of the `master` branch of [ReFrame](https://github.com/reframe-hpc/reframe/). 
 Several tests are built on top of the `hpctestlib` library that is provided with ReFrame.
 
