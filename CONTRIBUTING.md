@@ -67,4 +67,3 @@ Need help? Open an issue or contact the maintainers on GitHub.
 ---
 
 We appreciate your contributions and effort in helping make this project better!
-
