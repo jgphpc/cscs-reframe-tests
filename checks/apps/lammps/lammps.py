@@ -74,11 +74,11 @@ class lammps_build_test(rfm.CompileOnlyRegressionTest):
     descr = 'LAMMPS Build Test'
     valid_prog_environs = ['+lammps-kokkos-dev']
     valid_systems = ['+gpu']
-    maintainers = ['SSA']
+    maintainers = ['pkanduri', 'nbrowning', 'romeli', 'SSA']
     sourcesdir = None
     lammps_sources = fixture(lammps_download, scope='environment')
     build_system = 'CMake'
-    tags = {'uenv', 'production'}
+    tags = {'uenv', 'maintenance'}
     build_locally = False
 
     @run_before('compile')
@@ -118,10 +118,10 @@ class lammps_gpu_test(rfm.RunOnlyRegressionTest):
     executable = 'lmp'
     valid_prog_environs = ['+lammps-gpu-prod']
     valid_systems = ['+uenv']
-    maintainers = ['SSA']
+    maintainers = ['pkanduri', 'nbrowning', 'romeli', 'SSA']
     test_name = variable(str, value='lj_gpu')
     energy_reference = -4.620456
-    tags = {'uenv', 'production'}
+    tags = {'uenv', 'production', 'maintenance'}
 
     @run_before('run')
     def prepare_run(self):
@@ -191,7 +191,7 @@ class lammps_kokkos_test(rfm.RunOnlyRegressionTest):
     maintainers = ['SSA']
     test_name = variable(str, value='lj_kokkos')
     energy_reference = -4.620456
-    tags = {'uenv', 'production'}
+    tags = {'uenv', 'production', 'maintenance'}
 
     @run_before('run')
     def prepare_run(self):

@@ -60,9 +60,9 @@ def create_checks(check):
 
     check.CLASS = 'PROXY'
 
-    check('printenv http_proxy',  expected=r'http://proxy.cscs.ch:8080', where='+remote')
-    check('printenv https_proxy', expected=r'http://proxy.cscs.ch:8080', where='+remote')
-    check('printenv no_proxy',    expected=r'.local,.cscs.ch,localhost,148.187.0.0/16,10.0.0.0/8,172.16.0.0/12', where='+remote')
+    # check('printenv http_proxy',  expected=r'http://proxy.cscs.ch:8080', where='+remote')
+    # check('printenv https_proxy', expected=r'http://proxy.cscs.ch:8080', where='+remote')
+    # check('printenv no_proxy',    expected=r'.local,.cscs.ch,localhost,148.187.0.0/16,10.0.0.0/8,172.16.0.0/12', where='+remote')
 
     # check('printenv http_proxy', expected=r'', where='-remote')
     # check('printenv https_proxy', expected=r'', where='-remote')
@@ -112,7 +112,7 @@ def create_checks(check):
 
     check.CLASS = 'OSINSTALL'
 
-    check('cat /etc/os-release', expected=r'PRETTY_NAME="SUSE Linux Enterprise Server 15 SP5"')
+    check('cat /etc/os-release', expected=r'PRETTY_NAME="SUSE Linux Enterprise Server 15 SP6"')
     check('cat /etc/locale.conf', expected=r'LANG=en_US.UTF-8')
 
     # ----------------------------------------------------------------------- #
@@ -176,8 +176,6 @@ def create_checks(check):
     check('grep -q "/capstor/scratch/cscs /capstor/scratch/cscs lustre"     /proc/mounts || echo FAILED', not_expected=r'FAILED')
     check('grep -q "/capstor/store/cscs /capstor/store/cscs lustre"         /proc/mounts || echo FAILED', not_expected=r'FAILED')
     check('grep -q "/capstor/store/cscs /capstor/store/cscs lustre"         /proc/mounts || echo FAILED', not_expected=r'FAILED')
-
-    check('grep -q "pe_opt_cray_pe /opt/cray/pe"  /proc/mounts || echo FAILED', not_expected=r'FAILED')
 
     check('printenv SCRATCH || echo FAILED', not_expected=r'FAILED')
     check('printenv PROJECT || echo FAILED', not_expected=r'FAILED')

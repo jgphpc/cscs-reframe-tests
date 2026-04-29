@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
-import shutil
 
 import reframe as rfm
 import reframe.utility.sanity as sn
@@ -43,7 +42,7 @@ slurm_config = {
 @rfm.simple_test
 class VaspCheckUENV(rfm.RunOnlyRegressionTest):
     executable = 'vasp_std'
-    maintainers = ['SSA']
+    maintainers = ['fraschs', 'romeli', 'SSA']
     valid_systems = ['*']
 
     valid_prog_environs = ['+vasp']
@@ -106,7 +105,7 @@ class VaspCheckUENV(rfm.RunOnlyRegressionTest):
 @rfm.simple_test
 class VaspBuildTestUENV(rfm.CompileOnlyRegressionTest):
     '''
-    Test VASP build from source.
+    Test VASP build from source using a modified makefile.
     '''
 
     descr = 'VASP Build Test'
@@ -115,10 +114,10 @@ class VaspBuildTestUENV(rfm.CompileOnlyRegressionTest):
     valid_systems = ['*']
     build_system = 'Make'
     # only build std target
-    maintainers = ['SSA']
+    maintainers = ['fraschs', 'romeli', 'SSA']
     # run on node to load uenv
     build_locally = False
-    tags = {'uenv'}
+    tags = {'uenv', 'maintenance'}
 
     @run_before('compile')
     def prepare_build(self):
@@ -142,7 +141,7 @@ class VaspBuildTestUENV(rfm.CompileOnlyRegressionTest):
             self.skip(f'No makefile for uarch {self.uarch}')
 
         vasp_download_cmd = (
-            f'curl --retry 5 '
+            f'curl -L --retry 5 '
             f'-u ${{CSCS_REGISTRY_USERNAME}}:${{CSCS_REGISTRY_PASSWORD}} '
             '-X GET https://jfrog.svc.cscs.ch/artifactory'
             f'/uenv-sources/vasp/vasp-{self.version}.tar.bz2 '
@@ -172,7 +171,8 @@ class VaspBuildTestUENV(rfm.CompileOnlyRegressionTest):
 @rfm.simple_test
 class VaspBuildCheckUENV(VaspCheckUENV):
     valid_prog_environs = ['+vasp-dev']
-    tags = {'uenv'}
+
+    tags = {'uenv', 'maintenance'}
 
     @run_after('init')
     def setup_dependency(self):
