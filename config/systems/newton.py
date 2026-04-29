@@ -31,7 +31,7 @@ site_configuration = {
                     'launcher': 'srun',
                     'access': ['-p haswell',
                                '-w haswell-t16-[03-29,31,33-54]'],
-                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel-old'],
                     'env_vars': [
                         ['MODULEPATH',
                          '/softs/eb/haswell/modules/all:/softs/manual/modules']
@@ -49,8 +49,8 @@ site_configuration = {
                     'scheduler': 'slurm',
                     'launcher': 'srun',
                     'access': ['-p haswell',
-                               '-w haswell-f20-[01-03]]'],
-                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                               '-w haswell-f20-[01-03]'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel-old'],
                     'env_vars': [
                         ['MODULEPATH',
                          '/softs/eb/haswell/modules/all:/softs/manual/modules']
@@ -68,8 +68,8 @@ site_configuration = {
                     'scheduler': 'slurm',
                     'launcher': 'srun',
                     'access': ['-p haswell',
-                               '-w haswell-x20-[01-08]]'],
-                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                               '-w haswell-x20-[01-08]'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel-old'],
                     'env_vars': [
                         ['MODULEPATH',
                          '/softs/eb/haswell/modules/all:/softs/manual/modules']
@@ -88,7 +88,7 @@ site_configuration = {
                     'launcher': 'srun',
                     'access': ['-p haswell',
                                '-w haswell-x44-01'],
-                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel-old'],
                     'env_vars': [
                         ['MODULEPATH',
                          '/softs/eb/haswell/modules/all:/softs/manual/modules']
@@ -307,17 +307,31 @@ site_configuration = {
             'cc': 'mpicc',
             'cxx': 'mpicxx',
             'ftn': 'mpif90',
-            # 'target_systems': [''],
             'features': [
                 'serial', 'openmp', 'mpi', 'alloc_speed', 'hdf5'
             ],
             'modules': ['foss']  # hwl:foss/2023a, else:foss/2025b
         },
         {
+            'name': 'PrgEnv-intel-old',
+            'cc': 'mpiicc',
+            'cxx': 'mpiicpc',
+            'ftn': 'mpiifort',
+            # 'target_systems': ['haswell-t16', 'haswell-f20', 'haswell-x20',
+            #                    'haswell-x44', 'prepost-haswell'],
+            'features': [
+                'serial', 'openmp', 'mpi', 'alloc_speed', 'hdf5'
+            ],
+            'modules': ['intel']  # hwl:intel/2023a, else:intel/2025a
+        },
+        {
             'name': 'PrgEnv-intel',
             'cc': 'mpiicx',
             'cxx': 'mpiicpx',
             'ftn': 'mpiifort',
+            # 'target_systems': ['cascade-t32', 'cascade-f32', 'cascade-x32',
+            #     'skylake-t32', 'skylake-f32', 'genoa-t64', 'prepost-cascade',
+            #     'prepost-skylake', 'prepost-genoa'],
             'features': [
                 'serial', 'openmp', 'mpi', 'alloc_speed', 'hdf5'
             ],

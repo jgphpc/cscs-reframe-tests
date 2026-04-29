@@ -1,41 +1,41 @@
 import os
 import reframe as rfm
 import reframe.utility.sanity as sn
-import uenv
 
 
 @rfm.simple_test
 class tuto_serial(rfm.RegressionTest):
     descr = "Compile, execute et analyse le code pi_integral"
     maintainers = ['pmcs2i', '@jgphpc']
-    valid_systems = ['*']
-    valid_prog_environs = ['*']
+    valid_systems = ['+cpu']
+    valid_prog_environs = ['+serial']
     # no:sourcesdir = 'git@gitlab.pmcs2i.ec-lyon.fr:PMCS2I/hpc-quick-start.git'
     repo = 'git@gitlab.pmcs2i.ec-lyon.fr:PMCS2I/hpc-quick-start.git'
-    # datadump = variable(str, value='OFF')
     build_system = 'SingleSource'
-    sourcepath = 'hpc-quick-start/pi_integral/src/pi.c'
+    sourcesdir = 'src/hpc-quick-start.git/pi_integral/src'
+    sourcepath = 'pi.c'
     # build_locally = False
 
     executable = './pi.exe'
     intervalles = parameter([1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
     # intervalles = parameter([1000, 10000])
+    num_nodes = variable(int, value=1)
     time_limit = '2m'
 
     @run_before('compile')
     def setup_build(self):
-        self.prebuild_cmds = [
-            f'git clone --depth=1 {self.repo} '
-            f';cd hpc-quick-start ;git log --pretty=oneline ;cd ..',
-        ]
+#         self.prebuild_cmds = [
+#             f'git clone --depth=1 {self.repo} '
+#             f';cd hpc-quick-start ;git log --pretty=oneline ;cd ..',
+#         ]
         self.build_system.ldflags += ['-lm']
 
     @run_before('run')
     def setup_job(self):
         # self.job.options = [f'--nodes=1']
-        self.executable_opts = [f'{self.intervalles}']
-        self.prerun_cmds = [r'echo t0=$(date +%s%N)']
-        self.postrun_cmds = [r'echo t1=$(date +%s%N)']  # ns2ms -> *10^-6
+        self.executable_opts = [f'{int(self.intervalles)}']
+        self.prerun_cmds = [r'echo t0=$(date +%s%N)']  # ns2ms -> *10^-6
+        self.postrun_cmds = [r'echo t1=$(date +%s%N)']
 
     @sanity_function
     def validate_test(self):
