@@ -8,7 +8,8 @@ Several tests are built on top of the `hpctestlib` library that is provided with
 
 ## Running on a CSCS system
 
-To run the test suite you need first to clone and bootstrap ReFrame and then this repo:
+To run the test suite you need first to clone and bootstrap ReFrame and then
+this repo:
  
 ### Install ReFrame
 
