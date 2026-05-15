@@ -3,6 +3,13 @@
 # https://confluence.cscs.ch/spaces/reframe/pages/917505368/Flexible+Tests
 # source checks/eclyon/scripts/distribute_partition+idle.sh haswell && echo nodelist=$nodelist
 
+# for ii in haswell skylake cascade genoa ;do ./distribute_partition+idle.sh $ii ;done
+#  partition=haswell nodelist=haswell-f20-[02-03],haswell-t16-[19,27-29,35-42,44,48,50,52-53],haswell-x20-[01-08],haswell-x44-01 # 28
+#  partition=skylake nodelist=skylake-f32-06 # 1
+#  partition=cascade nodelist=cascade-f32-[02-04,06,08],cascade-t32-[04,12-13,15-17,22,28,32,35,39-40],cascade-x32-[01-04] # 21
+#  partition=genoa no.idle.nodes.found
+
+
 partition=$1
 
 # same with --json
@@ -24,12 +31,12 @@ if [ "$json" = "N" ] ;then
     nodelist_b=$(paste -d " " .eff.1 .eff.2 |grep " IDLE$" |awk '{printf "%s,",$1}')
     rm -f .eff.1 .eff.2
     if [ -z $nodelist_b ] ;then
-        echo "no.idle.nodes.found"
+        echo "# partition=$partition no.idle.nodes.found"
         # exit 0
     else
         nodelist=$(hostlist -c $nodelist_b)
         nnodes=$(hostlist -e $nodelist |wc -l)
-        echo "nodelist=$nodelist # $nnodes"
+        echo "# partition=$partition nodelist=$nodelist # $nnodes"
         export nodelist=$nodelist
     fi
 fi
