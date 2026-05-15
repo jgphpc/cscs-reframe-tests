@@ -18,6 +18,13 @@
 
 partition=$1
 
+scontrol show partition $partition &> /dev/null
+if [ $? -ne 0 ] ;then
+    echo "# partition=$partition not found"
+    scontrol show partition |grep PartitionName=
+    return
+fi
+
 # same with --json
 # rc=$(scontrol show nodes --json &> /dev/null; echo $?)    
 # if [ $rc ] ;then
