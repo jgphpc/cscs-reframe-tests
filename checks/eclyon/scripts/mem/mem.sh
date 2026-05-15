@@ -2,7 +2,7 @@
 
 in=latest.json
 
-mem_avail=$(jq -r '.runs[].testcases[].perfvalues' latest.json  |grep -A1 mem_avail |grep , |tr -d , |sort -nk 1)
+mem_avail=$(jq -r '.runs[].testcases[].perfvalues' $in |grep -A1 mem_avail |grep , |tr -d , |sort -nk 1)
 
 # max=$(echo $mem_avail |tr " " "\n" |tail -1)
 
@@ -20,6 +20,6 @@ pctqmin=$(echo $qm $qmin |awk '{printf "%.4f", ($1-$2)/$1*100}')
 pctqmin_=$(echo $pctqmin |awk '{printf "%.4f", 100-$1}')
 
 # REPORT
-echo "# $median = median (100%)"
+echo "# $qm = median (100%)"
 echo "# $q1 = q1 = median - $pctq1 % ($pctq1_ % of median)"
 echo "# $qmin = min = median - $pctqmin % ($pctqmin_ % of median)"
