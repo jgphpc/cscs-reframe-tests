@@ -13,8 +13,8 @@ fi
 sinfo -s |egrep "TIMELIMIT|^$partition"
 
 # report nodes state in partition:
+# --- list of nodes in partition:
 nodelist_a=$(scontrol show partition $partition |grep " Nodes=" |cut -d= -f2)
-
 # --- list of nodes name:
 hostlist -e $nodelist_a > .eff.1
 # --- list of nodes state:
@@ -25,8 +25,8 @@ paste -d " " .eff.1 .eff.2 > .eff.3
 
 for ss in $list_of_states ;do
     nodelist=`hostlist -c $(grep "$ss" .eff.3 |awk '{print $1}')`
-    echo "# $ss $nodelist" |tr -d @
+    nnodes=$(hostlist -e $nodelist |wc -l)
+    echo "# $ss $nodelist # $nnodes" |tr -d @
 done
 
 rm -f .eff.1 .eff.2 .eff.3
-
