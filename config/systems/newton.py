@@ -99,6 +99,24 @@ site_configuration = {
                     'extras': {'cn_memory': 512},
                 },
                 # }}}
+                # {{{ haswell
+                {
+                    'name': 'haswell-all',
+                    'descr': 'haswell',
+                    'scheduler': 'slurm',
+                    'launcher': 'srun',
+                    'access': ['-p haswell'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel-old'],
+                    'env_vars': [
+                        ['MODULEPATH',
+                         '/softs/eb/haswell/modules/all:/softs/manual/modules']
+                    ],
+                    'time_limit': '10m',
+                    'max_jobs': 100,
+                    'features': ['cpu', 'remote', 'scontrol'],
+                    'extras': {'cn_memory': 512},
+                },
+                # }}}
 
                 # {{{ cascade-t32-[01-40]
                 {
@@ -157,6 +175,24 @@ site_configuration = {
                     'extras': {'cn_memory': 768},
                 },
                 # }}}
+                # {{{ cascade
+                {
+                    'name': 'cascade-all',
+                    'descr': 'cascade',
+                    'scheduler': 'slurm',
+                    'launcher': 'srun',
+                    'access': ['-p cascade'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                    'env_vars': [
+                        ['MODULEPATH',
+                         '/softs/eb/cascade/modules/all:/softs/manual/modules']
+                    ],
+                    'time_limit': '10m',
+                    'max_jobs': 4,
+                    'features': ['cpu', 'remote', 'scontrol'],
+                    'extras': {'cn_memory': 768},
+                },
+                # }}}
 
                 # {{{ skylake-t32-[01-14]
                 {
@@ -196,6 +232,24 @@ site_configuration = {
                     'extras': {'cn_memory': 384},
                 },
                 # }}}
+                # {{{ skylake
+                {
+                    'name': 'skylake-all',
+                    'descr': 'skylake',
+                    'scheduler': 'slurm',
+                    'launcher': 'srun',
+                    'access': ['-p skylake'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                    'env_vars': [
+                        ['MODULEPATH',
+                         '/softs/eb/skylake/modules/all:/softs/manual/modules']
+                    ],
+                    'time_limit': '10m',
+                    'max_jobs': 4,
+                    'features': ['cpu', 'remote', 'scontrol'],
+                    'extras': {'cn_memory': 384},
+                },
+                # }}}
 
                 # {{{ genoa-t64-[01-08]
                 {
@@ -205,6 +259,24 @@ site_configuration = {
                     'launcher': 'srun',
                     'access': ['-p genoa',
                                '-w genoa-t64-[01-08]'],
+                    'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
+                    'env_vars': [
+                        ['MODULEPATH',
+                         '/softs/eb/genoa/modules/all:/softs/manual/modules']
+                    ],
+                    'time_limit': '10m',
+                    'max_jobs': 4,
+                    'features': ['cpu', 'remote', 'scontrol'],
+                    'extras': {'cn_memory': 384},
+                },
+                # }}}
+                # {{{ genoa
+                {
+                    'name': 'genoa-all',
+                    'descr': 'genoa',
+                    'scheduler': 'slurm',
+                    'launcher': 'srun',
+                    'access': ['-p genoa'],
                     'environs': ['builtin', 'PrgEnv-gnu', 'PrgEnv-intel'],
                     'env_vars': [
                         ['MODULEPATH',

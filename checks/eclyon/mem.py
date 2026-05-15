@@ -27,13 +27,17 @@ class memory(rfm.RunOnlyRegressionTest):
     @sanity_function
     def validate_test(self):
         """
-        nid001034 / MemTotal:263242652kB / RealMemory=241746 AllocMem=241746 FreeMem=239037 /
+        nid001034 / MemTotal:263242652kB / MemAvailable:698099288kB / RealMemory=241746 AllocMem=241746 FreeMem=239037 /
+        haswell-t16-49 / MemTotal:65710212kB / RealMemory=64000 AllocMem=4000 FreeMem=62899 /
             MemTotal: Total usable RAM i.e., physical RAM minus a few reserved
                       bits and the kernel binary code (man 5 proc, /proc/meminfo)
             RealMemory: The total memory, in MB, on the node (man scontrol)
+
+MemFree:        50333592 kB = LowFree+HighFree
+MemAvailable:   698088724 kB estimate of how much memory is available for starting new applications, without swapping.
         """
         regexes = [
-            r'nid\d+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ RealMemory=(?P<mem_real>\S+)',
+            r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)',
             r'^t0=', r'^t1='
         ]
         assert_list = []
@@ -53,8 +57,13 @@ class memory(rfm.RunOnlyRegressionTest):
 
     @performance_function('kB')
     def mem_total(self):
-        regex = r'nid\d+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
+        regex = r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
         return sn.extractsingle(regex, self.stdout, 'mem_tot', int)
+
+    @performance_function('kB')
+    def mem_avail(self):
+        regex = r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
+        return sn.extractsingle(regex, self.stdout, 'mem_avail', int)
 
     @performance_function('MB')
     def mem_real(self):
@@ -75,7 +84,7 @@ jq -r '.runs[].testcases[] | [
 "nid001131",263242644,"normal","builtin"
 "nid001129",263242660,"normal","builtin"
         """
-        regex = r'nid\d+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
+        regex = r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
         return sn.extractsingle(regex, self.stdout, 'mem_real', int)
 
 
