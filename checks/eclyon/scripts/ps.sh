@@ -14,8 +14,8 @@ hname=$(hostname)
 ## cpu_list=$(hwloc-calc --physical --intersect core 0x$affinity_mask)
 cpu_list_short=$(taskset -pc $pid | awk -F': ' '{print $2}')
 
-if [ $SLURM_NODEID = 0 ] ;then
-    if [ $SLURM_LOCALID = 0 ] ;then
+if [ "$SLURM_NODEID" = "0" ] ;then
+    if [ "$SLURM_LOCALID" = "0" ] ;then
         lscpu |grep ^NUMA
     fi
 fi

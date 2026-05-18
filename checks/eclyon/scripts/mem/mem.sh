@@ -2,9 +2,14 @@
 
 in=latest.json
 
-mem_avail=$(jq -r '.runs[].testcases[].perfvalues' $in |grep -A1 mem_avail |grep , |tr -d , |sort -nk 1)
+#kB: mem_avail=$(jq -r '.runs[].testcases[].perfvalues' $in |grep -A1 mem_avail\" |grep , |tr -d , |sort -nk 1)
+mem_avail=$(jq -r '.runs[].testcases[].perfvalues' $in |grep -A1 mem_avail_GB\" |grep , |tr -d , |sort -nk 1)
 
+echo "# mem_avail=$mem_avail"
 # max=$(echo $mem_avail |tr " " "\n" |tail -1)
+
+# AVERAGE
+qavg=$(echo $mem_avail |tr " " "\n" |awk '{s=s+$1}END{printf "%.1f", s/NR}')
 
 # MEDIAN
 qm=$(echo $mem_avail |tr " " "\n" |awk ' { a[i++]=$1; } END { print a[int(i/2)]; }')
@@ -20,6 +25,7 @@ pctqmin=$(echo $qm $qmin |awk '{printf "%.4f", ($1-$2)/$1*100}')
 pctqmin_=$(echo $pctqmin |awk '{printf "%.4f", 100-$1}')
 
 # REPORT
+echo "# $qavg = average"
 echo "# $qm = median (100%)"
 echo "# $q1 = q1 = median - $pctq1 % ($pctq1_ % of median)"
 echo "# $qmin = min = median - $pctqmin % ($pctqmin_ % of median)"

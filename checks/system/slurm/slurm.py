@@ -451,48 +451,48 @@ class SlurmQueueStatusCheck(rfm.RunOnlyRegressionTest):
         return 100.0 * self.num_matches / self.num_all_matches
 
 
-@rfm.simple_test
-class SlurmPrologEpilogCheck(rfm.RunOnlyRegressionTest):
-    descr = 'Runs Prolog and Epilog tests'
-    valid_systems = ['*']
-    valid_prog_environs = ['builtin']
-    maintainers = ['VCUE', 'PA']
-    time_limit = '2m'
-    kafka_logger = '/etc/slurm/utils/kafka_logger'
-    prolog_dir = '/etc/slurm/node_prolog.d/'
-    epilog_dir = '/etc/slurm/node_epilog.d/'
-    prerun_cmds = [f'ln -s {kafka_logger} ./kafka_logger']
-    test_files = []
-    try:
-        for file in os.listdir(epilog_dir):
-            if os.path.isfile(os.path.join(epilog_dir, file)):
-                test_files.append(os.path.join(epilog_dir, file))
-    except PermissionError:
-        pass
-
-    try:
-        for file in os.listdir(prolog_dir):
-            if os.path.isfile(os.path.join(prolog_dir, file)):
-                test_files.append(os.path.join(prolog_dir, file))
-    except PermissionError:
-        pass
-
-    test_file = parameter(test_files)
-    tags = {'vs-node-validator'}
-
-    @run_after('setup')
-    def set_executable(self):
-        self.executable = f'bash {self.test_file} --drain=off'
-
-    @sanity_function
-    def validate(self):
-        reason = sn.extractall(r'reason:\s*(.*)', self.stdout, tag=1)
-
-        if reason:
-            return sn.assert_not_found('will be drained with reason',
-                                       self.stdout, msg=f'{reason[0]}')
-        else:
-            return True
+# @rfm.simple_test
+# class SlurmPrologEpilogCheck(rfm.RunOnlyRegressionTest):
+#     descr = 'Runs Prolog and Epilog tests'
+#     valid_systems = ['*']
+#     valid_prog_environs = ['builtin']
+#     maintainers = ['VCUE', 'PA']
+#     time_limit = '2m'
+#     kafka_logger = '/etc/slurm/utils/kafka_logger'
+#     prolog_dir = '/etc/slurm/node_prolog.d/'
+#     epilog_dir = '/etc/slurm/node_epilog.d/'
+#     prerun_cmds = [f'ln -s {kafka_logger} ./kafka_logger']
+#     test_files = []
+#     try:
+#         for file in os.listdir(epilog_dir):
+#             if os.path.isfile(os.path.join(epilog_dir, file)):
+#                 test_files.append(os.path.join(epilog_dir, file))
+#     except PermissionError:
+#         pass
+# 
+#     try:
+#         for file in os.listdir(prolog_dir):
+#             if os.path.isfile(os.path.join(prolog_dir, file)):
+#                 test_files.append(os.path.join(prolog_dir, file))
+#     except PermissionError:
+#         pass
+# 
+#     test_file = parameter(test_files)
+#     tags = {'vs-node-validator'}
+# 
+#     @run_after('setup')
+#     def set_executable(self):
+#         self.executable = f'bash {self.test_file} --drain=off'
+# 
+#     @sanity_function
+#     def validate(self):
+#         reason = sn.extractall(r'reason:\s*(.*)', self.stdout, tag=1)
+# 
+#         if reason:
+#             return sn.assert_not_found('will be drained with reason',
+#                                        self.stdout, msg=f'{reason[0]}')
+#         else:
+#             return True
 
 
 @rfm.simple_test

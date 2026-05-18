@@ -1,0 +1,129 @@
+#!/bin/sh
+
+#{{{ tuto2.py README 
+# @rfm.simple_test
+# class tuto_mpi(rfm.RunOnlyRegressionTest):
+# # class tuto_mpi(rfm.RegressionTest):
+#     """
+#     PARTITION NODES(A/I/O/T)
+#     normal*         0/9/4/13
+# 
+#    --flex-alloc-nodes {all|STATE|NUM}
+#                          Set strategy for the flexible node allocation (default: "idle")
+#    --flex-alloc-strict   Fail the flexible tests if not enough nodes can be found
+# 
+#     num_tasks = 0 + num_tasks_per_node = 4 + --flex-alloc-nodes=all  -> ntasks=52 / 13 nodes
+#     num_tasks = 0 + num_tasks_per_node = 4 + --flex-alloc-nodes=idle -> ntasks=36 /  9 nodes
+#     num_tasks = 0 + num_tasks_per_node = 4                           -> ntasks=36 /  9 nodes (idem)
+#     num_tasks = 0 + num_tasks_per_node = 4 + --flex-alloc-nodes=2    -> ntasks=8  /  2 nodes
+# 
+# # https://code.ornl.gov/olcf/hello_mpi_omp/-/raw/master/hello_mpi_omp.c
+# OMP_NUM_THREADS=1 srun --uenv=/capstor/scratch/cscs/piccinal/.uenv-images-x86_64/images/39ed0d2f2aca90d1c86e6300379ce265941544a16162ede41a383c15fb0fea59/store.squashfs --view=oneapi -N2 -n256 -t1 -A `id -gn` ./a.out  > o
+# 
+# git clone https://github.com/TACC/amask.git amask.git
+# OMP_NUM_THREADS=1 srun --uenv=/capstor/scratch/cscs/piccinal/.uenv-images-x86_64/images/39ed0d2f2aca90d1c86e6300379ce265941544a16162ede41a383c15fb0fea59/store.squashfs --view=oneapi -N2 -n256 -t1 -A `id -gn` --hint=nomultithread --cpu-bind=cores /capstor/scratch/cscs/piccinal/pilatus/rfm/DEL/amask.git/src/amask_mpi -vs > oo
+# 
+# cat ps.sh
+# #!/bin/bash
+# ps -o pid=,psr= -p $$
+# # ps -o pid=,psr=,comm= -p $$
+# 
+# 
+# srun -N1 -n32 -t1 -pskylake lstopo --no-io  --no-caches --output-format ascii
+# 
+# 
+#     """
+#     descr = "Compile, execute et analyse le code MPI pi_integral"
+#     maintainers = ['pmcs2i', '@jgphpc']
+#     valid_systems = ['+uenv']
+#     valid_prog_environs = ['+mpi']
+#     build_system = 'SingleSource'
+#     sourcesdir = 'src/hpc-quick-start.git/pi_integral/src_mpi'
+#     sourcepath = 'pi.c'
+#     build_locally = False
+# 
+#     executable = '~/pi.exe'
+#     # executable = './pi.exe'
+#     # intervalles = parameter([1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
+#     # intervalles = parameter([1000, 10000])
+#     # num_nodes = variable(int, value=1)
+#     num_tasks = 0
+#     num_tasks_per_node = 4
+#     time_limit = '30s'
+# 
+#     @run_before('compile')
+#     def setup_build(self):
+#         self.build_system.ldflags += ['-lm']
+# 
+# #     @run_before('run')
+# #     def setup_job(self):
+# #         # self.job.options = [f'--nodes=1']
+# #         # self.executable_opts = [f'{int(self.intervalles)}']
+# #         self.prerun_cmds = [r'echo t0=$(date +%s%N)']  # ns2ms -> *10^-6
+# #         self.postrun_cmds = [r'echo t1=$(date +%s%N)']
+# 
+#     @sanity_function
+#     def validate_test(self):
+#         """
+#         ./pi.exe 10
+#         Number of intervals = 10
+#         Estimation of Pi  3.1045183262483182E+00
+#         Exact value       3.1415926535897931E+00 Error : 3.7074327341474866E-02
+#         """
+#         regexes = [
+#             r'^Number of intervals = \d+',
+#             r'^Exact value\s+\S+ Error :\s+(\S+)',
+#             # r'^t0=', r'^t1='
+#         ]
+#         assert_list = []
+#         for regex in regexes:
+#             assert_list.append(
+#                 sn.assert_found(regex, self.stdout, msg=f'found "{regex}"'))
+# 
+#         return sn.all(assert_list)
+# 
+#     @performance_function('')
+#     def sim_error(self):
+#         regex = r'^Exact value\s+\S+ Error :\s+(?P<err>\S+)'
+#         return sn.extractsingle(regex, self.stdout, 'err', float)
+#}}}
+    # intervalles = parameter([1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9])
+    # num_nodes = variable(int, value=1)
+
+    @run_before('run')
+    def setup_job(self):
+        # self.job.options = [f'--nodes=1']
+        # self.executable_opts = [f'{int(self.intervalles)}']
+        self.prerun_cmds = [r'echo t0=$(date +%s%N)']  # ns2ms -> *10^-6
+        self.postrun_cmds = [r'echo t1=$(date +%s%N)']
+
+    @sanity_function
+    def validate_test(self):
+        """
+        nid001034 / MemTotal:263242652kB / MemAvailable:698099288kB / RealMemory=241746 AllocMem=241746 FreeMem=239037 /
+        haswell-t16-49 / MemTotal:65710212kB / RealMemory=64000 AllocMem=4000 FreeMem=62899 /
+            MemTotal: Total usable RAM i.e., physical RAM minus a few reserved
+                      bits and the kernel binary code (man 5 proc, /proc/meminfo)
+            RealMemory: The total memory, in MB, on the node (man scontrol)
+
+MemFree:        50333592 kB = LowFree+HighFree
+MemAvailable:   698088724 kB estimate of how much memory is available for starting new applications, without swapping.
+        """
+        regexes = [
+            r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)',
+            r'^t0=', r'^t1='
+        ]
+        assert_list = []
+        for regex in regexes:
+            assert_list.append(
+                sn.assert_found(regex, self.stdout, msg=f'found "{regex}"'))
+
+        return sn.all(assert_list)
+
+
+    @performance_function('kB')
+    def mem_total(self):
+        regex = r'\S+ \/ MemTotal:(?P<mem_tot>\S+)kB \/ MemAvailable:(?P<mem_avail>\S+)kB \/ RealMemory=(?P<mem_real>\S+)'
+        return sn.extractsingle(regex, self.stdout, 'mem_tot', int)
+
+
