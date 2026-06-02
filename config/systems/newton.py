@@ -1,6 +1,56 @@
 # https://reframe-hpc.readthedocs.io/en/latest/config_reference.html
+# ./R -c checks/eclyon/mem.py --system newton:haswell-t16 -p PrgEnv-gnu -r ###--skip-performance-check
 
+import json
 import os
+
+
+# {{{ VICTORIAMETRICS
+def _format_victoriametrics(record, extras, ignore_keys):
+    data = {}
+    for attr, val in record.__dict__.items():
+        if attr in ignore_keys or attr.startswith('_'):
+            continue
+
+        if attr in ('check_perf_value', 'check_perf_ref') and val is not None:
+            data[attr] = float(val)
+        else:
+            data[attr] = val
+
+    data.update(extras)
+    # data['@timestamp'] = _format_time_rfc3339(record.created, r'%FT%T%:z')
+
+    timestamp = data.get('check_job_completion_time_unix')
+    timestamps = [int(timestamp * 1000)] if timestamp is not None else None
+
+    # VMetrics labels must be strings; keep perf values out of labels
+    labels = {
+        k: str(v) if v is not None else ''
+        for k, v in data.items()
+        if k not in ('check_perf_value', 'check_perf_ref')
+    }
+    labels.setdefault('__name__', labels.get('check_unique_name', 'reframe'))
+
+    lines = []
+    for perf_key, perf_type in (
+        ('check_perf_value', 'value'),
+        ('check_perf_ref', 'ref'),
+    ):
+        perf_val = data.get(perf_key)
+        if perf_val is None:
+            continue
+
+        payload = {
+            'metric': {**labels, 'check_perf_type': perf_type},
+            'values': [perf_val],
+        }
+        if timestamps is not None:
+            payload['timestamps'] = timestamps
+
+        lines.append(json.dumps(payload, separators=(',', ':')))
+
+    return '\n'.join(lines) + '\n' if lines else None
+# }}}
 
 
 site_configuration = {
@@ -454,6 +504,7 @@ site_configuration = {
     # reframe -C newton.py --show-config=logging
     'logging': [
         {
+            'perflog_multiline': True,
             # 'perflog_compat': True,
             # {{{ handlers
             'handlers': [
@@ -474,26 +525,70 @@ site_configuration = {
             # }}}
             # {{{ handlers_perflog
             'handlers_perflog': [
+            # {{{ PERFLOGS
+                {
+                    'type': 'filelog',
+                    'prefix': '%(check_system)s/%(check_partition)s',
+                    'level': 'info',
+                    'format': (
+                        '%(check_job_completion_time)s|reframe %(version)s|'
+                        '%(check_info)s|jobid=%(check_jobid)s|'
+                        '%(check_perf_var)s=%(check_perf_value)s|'
+                        'ref=%(check_perf_ref)s '
+                        '(l=%(check_perf_lower_thres)s, '
+                        'u=%(check_perf_upper_thres)s)|'
+                        '%(check_perf_unit)s'
+                    ),
+                    'datefmt': '%FT%T%:z',
+                    'append': True
+                },
+                # }}}
+                # {{{ VICTORIAMETRICS
                 {
                     'type': 'httpjson',
-                    # Set in the CI with environment variable: RFM_HTTPJSON_URL
-                    # http://log.cscs.ch:31311
-                    # http://vminsert.o11y.cscs.ch:8480/insert/0/prometheus/api/v1/import
-                    'url': 'http://httpjson-server:12345/rfm',
+                    #1node: export RFM_HTTPJSON_URL_VMETRICS='http://127.0.0.1:8428/api/v1/import'
+                    #xnode: export RFM_HTTPJSON_URL_VMETRICS='http://127.0.0.1:8428/insert/0/prometheus/api/v1/import'
+                    #cscs: export RFM_HTTPJSON_URL_VMETRICS='http://vminsert.o11y.cscs.ch:8480/insert/0/prometheus/api/v1/import'
+                    # -> could not initialize the httpjson handler;ignoring ...
+                    'url': os.getenv('RFM_HTTPJSON_URL_VMETRICS',
+                                     'http://dummy:1234/rfm'),
                     'level': 'info',
-#ok                     'extras': {
-#ok                         'data_stream': {
-#ok                             'type': 'logs',
-#ok                             'dataset': 'performance_values',
-#ok                             'namespace': 'reframe'
-#ok                         },
-#ok                         # 'rfm_ci_pipeline': os.getenv("CI_PIPELINE_URL", "#"),
-#ok                         # 'rfm_ci_project': os.getenv("CI_PROJECT_PATH", "Unknown CI Project")
-#ok                     },
-                    'debug': True,
-                    # 'json_formatter': _format_httpjson,
-                    'ignore_keys': ['check_perfvalues']
-                }
+                    'extra_headers': {
+                        'Content-Type': 'application/x-ndjson'
+                    },
+                    'extras': {
+                        'rfm_ci_pipeline': os.getenv('CI_PIPELINE_URL', '#'),
+                        'rfm_ci_project':
+                            os.getenv('CI_PROJECT_PATH', 'Unknown CI Project')
+                    },
+                    'json_formatter': _format_victoriametrics,
+                    'ignore_keys': [
+                        'check_perfvalues',
+                        'check_info', 'version', 'check_fail_phase',
+                        'check_fail_reason', 'check_perf_result',
+                        'check_job_exitcode', 'check_job_nodelist',
+                        'check_build_locally', 'check_build_time_limit',
+                        'check_descr', 'check_env_vars',
+                        'check_exclusive_access', 'check_executable',
+                        'check_executable_opts', 'check_extra_resources',
+                        'check_keep_files', 'check_local', 'check_maintainers',
+                        'check_maintainers', 'check_max_pending_time',
+                        'check_modules', 'check_num_cpus_per_task',
+                        'check_num_gpus_per_node', 'check_num_tasks',
+                        'check_num_tasks_per_core', 'check_num_tasks_per_node',
+                        'check_num_tasks_per_socket', 'check_postbuild_cmds',
+                        'check_postrun_cmds', 'check_prebuild_cmds',
+                        'check_prefix', 'check_prerun_cmds',
+                        'check_readonly_files', 'check_short_name',
+                        'check_sourcepath', 'check_sourcesdir',
+                        'check_stagedir', 'check_strict_check', 'check_tags',
+                        'check_time_limit', 'check_use_multithreading',
+                        'check_valid_prog_environs', 'check_valid_systems',
+                        'check_variables'
+                    ],
+                    'debug': True
+                },
+                # }}}
             ]
         }
     ]  # }}} logging

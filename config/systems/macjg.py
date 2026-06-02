@@ -182,6 +182,7 @@ site_configuration = {
                     'type': 'httpjson',
                     #xnode: export RFM_HTTPJSON_URL_VMETRICS='http://127.0.0.1:8428/insert/0/prometheus/api/v1/import'
                     #1node: export RFM_HTTPJSON_URL_VMETRICS='http://127.0.0.1:8428/api/v1/import'
+                    #cscs: export RFM_HTTPJSON_URL_VMETRICS='http://vminsert.o11y.cscs.ch:8480/insert/0/prometheus/api/v1/import'
                     'url': os.getenv('RFM_HTTPJSON_URL_VMETRICS',
                                      'http://dummy:1234/rfm'),
                     # -> could not initialize the httpjson handler;ignoring ...
