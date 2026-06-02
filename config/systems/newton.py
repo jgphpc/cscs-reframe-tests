@@ -586,7 +586,7 @@ site_configuration = {
                         'check_valid_prog_environs', 'check_valid_systems',
                         'check_variables'
                     ],
-                    'debug': True
+                    # 'debug': True
                 },
                 # }}}
             ]

@@ -8,7 +8,7 @@ class memory(rfm.RunOnlyRegressionTest):
     descr = "Valide la memoire disponible du CPU"
     maintainers = ['pmcs2i', '@jgphpc']
     valid_systems = ['+cpu']
-    valid_prog_environs = ['builtin']
+    valid_prog_environs = ['builtin', 'PrgEnv-gnu']
     time_limit = '1m'
     sourcesdir = 'src/mem'
     executable = './mem.sh'
