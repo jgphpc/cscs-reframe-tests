@@ -566,7 +566,7 @@ site_configuration = {
                         'check_perfvalues',
                         'check_info', 'version', 'check_fail_phase',
                         'check_fail_reason', 'check_perf_result',
-                        'check_job_exitcode', 'check_job_nodelist',
+                        'check_job_exitcode',
                         'check_build_locally', 'check_build_time_limit',
                         'check_descr', 'check_env_vars',
                         'check_exclusive_access', 'check_executable',
@@ -586,7 +586,7 @@ site_configuration = {
                         'check_valid_prog_environs', 'check_valid_systems',
                         'check_variables'
                     ],
-                    # 'debug': True
+                    'debug': False
                 },
                 # }}}
             ]
