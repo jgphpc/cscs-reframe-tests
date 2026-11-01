@@ -14,7 +14,7 @@ site_configuration = {
     'systems': [
         {
             'name': 'starlex',
-            'descr': 'Piz starlex vcluster (through FirecREST)',
+            'descr': 'starlex vcluster (through FirecREST)',
             'hostnames': ['starlex'],
             'modules_system': 'nomod',
             'partitions': [
@@ -31,7 +31,7 @@ site_configuration = {
                         'cn_memory': 870000,
                     },
                     'features': ['gpu', 'nvgpu', 'remote'],
-                    'access': [f'--account={_account}'] if _account else [],
+                    'access': [f'--account={_account}', '--gpus-per-node=4'] if _account else ['--gpus-per-node=4'],
                     'resources': [
                         {
                             'name': 'switches',

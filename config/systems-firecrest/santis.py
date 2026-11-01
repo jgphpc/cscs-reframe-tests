@@ -14,7 +14,7 @@ site_configuration = {
     'systems': [
         {
             'name': 'santis',
-            'descr': 'Piz santis vcluster (through FirecREST)',
+            'descr': 'santis vcluster (through FirecREST)',
             'hostnames': ['santis'],
             'modules_system': 'nomod',
             'partitions': [
@@ -31,7 +31,7 @@ site_configuration = {
                         'cn_memory': 870000,
                     },
                     'features': ['gpu', 'nvgpu', 'remote'],
-                    'access': [f'--account={_account}'] if _account else [],
+                    'access': [f'--account={_account}', '--gpus-per-node=4'] if _account else ['--gpus-per-node=4'],
                     'resources': [
                         {
                             'name': 'switches',

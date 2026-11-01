@@ -14,7 +14,7 @@ site_configuration = {
     'systems': [
         {
             'name': 'beverin',
-            'descr': 'Piz beverin vcluster (through FirecREST)',
+            'descr': 'beverin vcluster (through FirecREST)',
             'hostnames': ['beverin'],
             'modules_system': 'nomod',
             'partitions': [
@@ -31,10 +31,7 @@ site_configuration = {
                         'cn_memory': 515208,
                     },
                     'features': ['gpu', 'amdgpu', 'remote'],
-                    'access': [
-                        '-pmi200',
-                        f'--account={_account}' if _account else []
-                    ],
+                    'access': [f'--account={_account}', '--partition=mi200'] if _account else ['--partition=mi200'],
                     'resources': [
                         {
                             'name': 'switches',
@@ -71,10 +68,7 @@ site_configuration = {
                         'cn_memory': 513700,
                     },
                     'features': ['gpu', 'amdgpu', 'remote'],
-                    'access': [
-                        '-pmi300',
-                        f'--account={_account}' if _account else []
-                    ],
+                    'access': [f'--account={_account}', '--partition=mi300'] if _account else ['--partition=mi300'],
                     'resources': [
                         {
                             'name': 'switches',

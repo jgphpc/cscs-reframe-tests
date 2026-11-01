@@ -31,7 +31,7 @@ site_configuration = {
                         'cn_memory': 850000,
                     },
                     'features': ['gpu', 'nvgpu', 'remote'],
-                    'access': [f'--account={_account}'] if _account else [],
+                    'access': [f'--account={_account}', '--gpus-per-node=4'] if _account else ['--gpus-per-node=4'],
                     'resources': [
                         {
                             'name': 'switches',
