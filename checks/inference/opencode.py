@@ -19,7 +19,7 @@ class inference_api(rfm.RunOnlyRegressionTest):
 
     @run_before('run')
     def set_runtime_args(self):
-        self.executable_opts = [urls[self.target]]
+        self.executable_opts = [self.target, urls[self.target]]
         # self.postrun_cmds = ['']
 
     @sanity_function
