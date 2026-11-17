@@ -9,7 +9,9 @@ import sys
 
 import reframe as rfm
 import reframe.utility.sanity as sn
+
 from uenv import uarch
+from reframe.core.builtins import loggable
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent / 'mixins'))
 from uenv_slurm_mpi_options import UenvSlurmMpiOptionsMixin  # noqa: E402
@@ -63,6 +65,38 @@ HPL.out      output file name (if any)
 8            memory alignment in double (> 0)
 """
 
+PM_ENERGY = ['accel0_energy', 'accel1_energy', 'accel2_energy',
+             'accel3_energy', 'energy']
+PM_POWER = ['accel0_power', 'accel1_power', 'accel2_power', 'accel3_power',
+            'power']
+PM_CAP = ['accel0_power_cap', 'accel1_power_cap', 'accel2_power_cap',
+          'accel3_power_cap',
+          'power_cap']
+PM_RAW = ['freshness', 'generation', 'raw_scan_hz', 'startup', 'version']
+# MI300: overshoot, overshoot_energy, capped_energy
+# MI200: cpu0_temp, cpu_energy/power, memory_energy/power
+
+
+def _pm_metric(pm_file, field=None):
+    '''
+    Reads /sys/cray/pm_counters/* and extract by format:
+      *_energy     -> '<n> J <n> us'
+      *_power      -> '<n> W <n> us'
+      *_power_cap  -> '<n> W'
+      the rest     -> '<n>'
+
+    `field` is one of 'J', 'W', 'us' or 'None' for files holding a
+    single integer. The unit of the metric is the field itself.
+    '''
+    if field:
+        regex, tag = rf'(?P<{field}>\d+) {field}', field
+    else:
+        regex, tag = r'(?P<val>\d+)', 'val'
+
+    return sn.make_performance_function(
+        sn.extractsingle(regex, pm_file, tag, int), field or ''
+    )
+
 
 class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
     descr = 'AMD HPL (rocHPL) test'
@@ -87,7 +121,6 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
         self.build_system.configuredir = 'rocHPL'
         self.build_system.builddir = 'build'
         self.build_system.max_concurrency = 10
-
         gpu_arch = self.current_partition.select_devices('gpu')[0].arch
         self.build_system.config_opts = [
             '-DHPL_VERBOSE_PRINT=ON',
@@ -96,11 +129,13 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
             '-DCMAKE_BUILD_TYPE=Release',
             f'-DCMAKE_HIP_ARCHITECTURES="{gpu_arch}"'
         ]
+        self.postbuild_cmds += [
+            f'rm -fr {self.build_system.configuredir}'
+        ]
 
     @run_before('run')
     def set_executable(self):
         self.uarch = uarch(self.current_partition)
-
         pre_script = f'./{self.uarch}-wrapper.sh'
         binary = os.path.join(self.build_system.builddir, 'bin', 'rochpl')
         self.executable = f'{pre_script} {binary}'
@@ -123,8 +158,12 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
                 'ff00000000000000ff00,'
                 'ff00000000000000ff00000000,'
                 'ff00000000000000ff0000000000')]
+            PM_ENERGY.extend(['cpu_energy', 'memory_energy'])
+            PM_POWER.extend(['cpu_power', 'memory_power'])
         else:
             self.job.launcher.options += ['--cpu-bind=cores']
+            PM_ENERGY.extend(['overshoot_energy, capped_energy'])
+            PM_RAW.append('overshoot')
 
         # env variables
         self.env_vars['MPICH_GPU_SUPPORT_ENABLED'] = '1'
@@ -163,6 +202,18 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
 
             self.reference = {self.current_partition.fullname: reference}
 
+    @run_before('run')
+    def pre_post_scripts(self):
+        self.prerun_cmds += [
+            './boot_time.sh',
+            './pm_counters.sh pm_t0',
+            'echo "# _t0=$(date +%s)"'
+        ]
+        self.postrun_cmds += [
+            'echo "# _t1=$(date +%s)"',
+            './pm_counters.sh pm_t1'
+        ]
+
     @sanity_function
     def assert_results(self):
         """
@@ -199,11 +250,73 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
     @run_before('performance')
     def set_perf_vars(self):
         make_perf = sn.make_performance_function
-
-        self.perf_variables = {}
+        # self.perf_variables = {}
         for perf in self.perf_:
             self.perf_variables[f'size {perf[0]}'] = \
                 make_perf(sn.getitem(perf, 1), 'Gflop/s')
+
+    @performance_function('s')
+    def _elapsed(self):
+        regex0 = r'# _t0=(?P<tt>\d+)'
+        regex1 = r'# _t1=(?P<tt>\d+)'
+        _t0 = sn.extractsingle(regex0, self.stdout, 'tt', int)
+        _t1 = sn.extractsingle(regex1, self.stdout, 'tt', int)
+        return (_t1 - _t0)
+
+    @performance_function('')
+    def _boot_time_epoch(self):
+        regex = r'# boot_time (?P<hh>\d+) h (?P<mm>\d+) m / (?P<ee>\d+)'
+        return sn.extractsingle(regex, self.stdout, 'ee', int)
+
+    @performance_function('minutes')
+    def _boot_time_elapsed(self):
+        regex = r'# boot_time (?P<hh>\d+) h (?P<mm>\d+) m / (?P<ee>\d+)'
+        hh = sn.extractsingle(regex, self.stdout, 'hh', int)
+        mm = sn.extractsingle(regex, self.stdout, 'mm', int)
+        return (hh*60 + mm)
+
+    @loggable
+    @property
+    def _boot_time_mi(self):
+        '''
+        MI200:gfx90a, MI300:gfx942
+        '''
+        try:
+            fname = sn.evaluate(self.stdout)
+            if fname and not os.path.isabs(fname):
+                fname = os.path.join(self.stagedir, fname)
+
+            regex = r'# boot_time.* / MI=(?P<mi>\S+)'
+            mi = sn.evaluate(sn.extractsingle(regex, fname, 'mi', str))
+        except Exception:
+            # No job yet, or the line is not in the output
+            return None
+
+        # self._boot_time_mi_value = mi
+        return mi
+
+    @run_before('performance')
+    def _pm_counters(self):
+        for pmd in ('pm_t0', 'pm_t1'):
+            for f in PM_ENERGY:
+                self.perf_variables[f'{pmd}_{f}_J'] = \
+                    _pm_metric(f'{pmd}/{f}', 'J')
+                self.perf_variables[f'{pmd}_{f}_us'] = \
+                    _pm_metric(f'{pmd}/{f}', 'us')
+
+            for f in PM_POWER:
+                self.perf_variables[f'{pmd}_{f}_W'] = \
+                    _pm_metric(f'{pmd}/{f}', 'W')
+                self.perf_variables[f'{pmd}_{f}_us'] = \
+                    _pm_metric(f'{pmd}/{f}', 'us')
+
+            for f in PM_CAP:
+                self.perf_variables[f'{pmd}_{f}_W'] = \
+                    _pm_metric(f'{pmd}/{f}', 'W')
+
+            for f in PM_RAW:
+                self.perf_variables[f'{pmd}_{f}'] = \
+                    _pm_metric(f'{pmd}/{f}')
 
 
 @rfm.simple_test
@@ -221,5 +334,6 @@ class RocHPL_medium(RocHPL):
 class RocHPL_large(RocHPL):
     matrix_sizes = [218880]
     tags = {'production', 'uenv', 'bencher'}
-    # mi300 performance has higher variability, so we lower the threshold for this test
+    # mi300 performance has higher variability,
+    # so we lower the threshold for this test:
     perf_lower_thres = {'mi300': -0.2}
