@@ -263,7 +263,7 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
         _t1 = sn.extractsingle(regex1, self.stdout, 'tt', int)
         return (_t1 - _t0)
 
-    @performance_function('')
+    @performance_function('s')
     def _boot_time_epoch(self):
         regex = r'# boot_time (?P<hh>\d+) h (?P<mm>\d+) m / (?P<ee>\d+)'
         return sn.extractsingle(regex, self.stdout, 'ee', int)
