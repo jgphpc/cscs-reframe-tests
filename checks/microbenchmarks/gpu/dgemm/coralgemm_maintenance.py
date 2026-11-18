@@ -276,7 +276,7 @@ class CoralGemm(rfm.RegressionTest):
             PM_ENERGY.extend(['cpu_energy', 'memory_energy'])
             PM_POWER.extend(['cpu_power', 'memory_power'])
         else:
-            PM_ENERGY.extend(['overshoot_energy, capped_energy'])
+            PM_ENERGY.extend(['overshoot_energy', 'capped_energy'])
             PM_RAW.append('overshoot')
 
     # {{{ _elapsed, _boot_time, MI200/MI300
