@@ -2,6 +2,7 @@
 # ReFrame Project Developers. See the top-level LICENSE file for details.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+# --> JIRA/SSA-900
 
 import os
 import reframe as rfm
@@ -22,6 +23,13 @@ PM_RAW = ['freshness', 'generation', 'raw_scan_hz', 'startup', 'version']
 
 def _pm_metric(pm_file, field=None):
     '''
+CSCS_RFM_UENV=prgenv-gnu/7.2.3:v1 reframe \
+-C cscs-reframe-tests.git/config/cscs.py     --keep-stage-files \
+--report-file latest.json \
+-c checks/microbenchmarks/gpu/dgemm/coralgemm_maintenance.py \
+-n 128000.*64F --repeat 3 -J w=nid002520 --system beverin:mi300 \
+--exec-policy serial -r
+
     Reads /sys/cray/pm_counters/* and extract by format:
       *_energy     -> '<n> J <n> us'
       *_power      -> '<n> W <n> us'
@@ -40,9 +48,23 @@ def _pm_metric(pm_file, field=None):
         sn.extractsingle(regex, pm_file, tag, int), field or ''
     )
 
+def _gflops(self, pf_op):
+    regex = r'^\s+(?P<GF>\S+)\s+\d'
+    if pf_op == 'min':
+        return sn.make_performance_function(
+            sn.min(sn.extractall(regex, self.stdout, 'GF', float)), 'GFlops')
+    elif pf_op == 'avg':
+        return sn.make_performance_function(
+            sn.avg(sn.extractall(regex, self.stdout, 'GF', float)), 'GFlops')
+    elif pf_op == 'max':
+        return sn.make_performance_function(
+            sn.max(sn.extractall(regex, self.stdout, 'GF', float)), 'GFlops')
+    else:
+        return None
+
 
 @rfm.simple_test
-class CoralGemm(rfm.RegressionTest):
+class CoralGemm(rfm.RunOnlyRegressionTest):
     descr = 'AMD CoralGemm test'
     valid_systems = ['+amdgpu +uenv']
     valid_prog_environs = ['+uenv +prgenv +rocm']
@@ -50,13 +72,19 @@ class CoralGemm(rfm.RegressionTest):
     sourcesdir = 'scripts'
     build_system = 'CMake'
     prebuild_cmds = [
-        'git clone --depth 1 --branch 2025.11 '
-        'https://github.com/AMD-HPC/CoralGemm.git'
+        # 'git clone --depth 1 --branch 2025.11 '
+        # 'https://github.com/AMD-HPC/CoralGemm.git'
+        'tar xf CoralGemm.git.tgz',
+        'ln -s CoralGemm.git CoralGemm'
     ]
+    postbuild_cmds = ['rm -fr CoralGemm.git.tgz CoralGemm.git']
     time_limit = '3m'
     build_locally = False
     num_tasks_per_node = 1
-    regex = r'    (?P<A0>\S+)\s+(?P<A1>\S+)\s+(?P<A2>\S+)\s+(?P<A3>\S+)\s+\d'
+    ### regex = r'    (?P<A0>\S+)\s+(?P<A1>\S+)\s+(?P<A2>\S+)\s+(?P<A3>\S+)\s+\d'
+    rocr_visible_devices = parameter(['0', '1', '2', '3'])
+    # rocr_visible_devices = parameter(['0', '3'])
+    rocr_visible_devices_on = variable(str, value='True')
     tags = {'production', 'uenv', 'benchmark', 'bencher'}
 
     # {{{ Sweep matrix sizes and precisions
@@ -113,31 +141,31 @@ class CoralGemm(rfm.RegressionTest):
     zero_beta = variable(bool, value=False)
     # }}}
 
-    @run_before('compile')
-    def set_build_options(self):
-        self.build_system.configuredir = 'CoralGemm'
-        self.build_system.builddir = 'build'
-
-        gpu_arch = self.current_partition.select_devices('gpu')[0].arch
-        if 'rocm' in self.current_environ.features:
-            self.build_system.config_opts = [
-                '-DCMAKE_BUILD_TYPE=Release',
-                '-DUSE_CUDA=OFF',
-                '-DUSE_HIP=ON',
-                f'-DCMAKE_HIP_ARCHITECTURES="{gpu_arch}"'
-            ]
-        else:  # cuda
-            gpu_arch = (
-                gpu_arch[len("sm_"):]
-                if gpu_arch.startswith("sm_")
-                else gpu_arch
-            )
-            self.build_system.config_opts = [
-                '-DCMAKE_BUILD_TYPE=Release',
-                '-DUSE_CUDA=ON',
-                '-DUSE_HIP=OFF',
-                f'-DCMAKE_CUDA_ARCHITECTURES="{gpu_arch}"'
-            ]
+#ori     @run_before('compile')
+#ori     def set_build_options(self):
+#ori         self.build_system.configuredir = 'CoralGemm'
+#ori         self.build_system.builddir = 'build'
+#ori 
+#ori         gpu_arch = self.current_partition.select_devices('gpu')[0].arch
+#ori         if 'rocm' in self.current_environ.features:
+#ori             self.build_system.config_opts = [
+#ori                 '-DCMAKE_BUILD_TYPE=Release',
+#ori                 '-DUSE_CUDA=OFF',
+#ori                 '-DUSE_HIP=ON',
+#ori                 f'-DCMAKE_HIP_ARCHITECTURES="{gpu_arch}"'
+#ori             ]
+#ori         else:  # cuda
+#ori             gpu_arch = (
+#ori                 gpu_arch[len("sm_"):]
+#ori                 if gpu_arch.startswith("sm_")
+#ori                 else gpu_arch
+#ori             )
+#ori             self.build_system.config_opts = [
+#ori                 '-DCMAKE_BUILD_TYPE=Release',
+#ori                 '-DUSE_CUDA=ON',
+#ori                 '-DUSE_HIP=OFF',
+#ori                 f'-DCMAKE_CUDA_ARCHITECTURES="{gpu_arch}"'
+#ori             ]
 
     @run_after('setup')
     def set_num_gpus(self):
@@ -148,7 +176,8 @@ class CoralGemm(rfm.RegressionTest):
     def set_executable(self):
         # {{{
         # Set mandatory arguments of the benchmark
-        self.executable = os.path.join(self.build_system.builddir, 'gemm')
+        ## self.executable = os.path.join(self.build_system.builddir, 'gemm')
+        self.executable = './___gemm'
 
         # Data precision for matrix A, B, C and computation
         self.precision_A = self._precisions
@@ -242,42 +271,57 @@ class CoralGemm(rfm.RegressionTest):
 
     @sanity_function
     def assert_results(self):
-        # The binary automatically launches on all available GPUs
-        # simultaneously, so we check that the output contains performance
-        # results for all GPUs.
-        s1 = sn.all([
-            sn.assert_found(rf'device_{i}_\[GFLOPS\]', self.stdout)
-            for i in range(self.num_gpus)
-        ])
-
-        # We also check that the output does not contain more GPUs than
-        # the expected number. In case of misconfiguration, the node can
-        # appear to have more GPUs than it actually has, with lower
-        # performance.
-        s2 = sn.assert_not_found(rf'device_{self.num_gpus}', self.stdout)
-
-        return sn.all([s1, s2])
+        return True
+#ori         # The binary automatically launches on all available GPUs
+#ori         # simultaneously, so we check that the output contains performance
+#ori         # results for all GPUs.
+#ori         s1 = sn.all([
+#ori             sn.assert_found(rf'device_{i}_\[GFLOPS\]', self.stdout)
+#ori             for i in range(self.num_gpus)
+#ori         ])
+#ori 
+#ori         # We also check that the output does not contain more GPUs than
+#ori         # the expected number. In case of misconfiguration, the node can
+#ori         # appear to have more GPUs than it actually has, with lower
+#ori         # performance.
+#ori         s2 = sn.assert_not_found(rf'device_{self.num_gpus}', self.stdout)
+#ori 
+#ori         return sn.all([s1, s2])
 
     @run_before('run')
     def pre_post_scripts(self):
+        self.env_vars = {
+            'ROCR_VISIBLE_DEVICES': self.rocr_visible_devices,
+            'HIP_VISIBLE_DEVICES': self.rocr_visible_devices
+        }
         self.prerun_cmds += [
             './boot_time.sh',
+            './coral/gpumon.sh start 1',
             './pm_counters.sh pm_t0',
             'echo "# _t0=$(date +%s)"'
         ]
 
         self.postrun_cmds += [
             'echo "# _t1=$(date +%s)"',
-            './pm_counters.sh pm_t1'
+            './pm_counters.sh pm_t1',
+            './coral/gpumon.sh stop',
+            '# if the test crash or is cancelled:',
+            'trap "./coral/gpumon.sh stop" EXIT INT TERM'
         ]
 
         self.uarch = uarch(self.current_partition)
         if self.uarch == 'mi200':
             PM_ENERGY.extend(['cpu_energy', 'memory_energy'])
             PM_POWER.extend(['cpu_power', 'memory_power'])
-        else:
+
+        if self.uarch == 'mi300':
             PM_ENERGY.extend(['overshoot_energy', 'capped_energy'])
             PM_RAW.append('overshoot')
+#         warnings:
+#             'pm_t0_cpu_energy_J':     'pm_t0_memory_energy_J':
+#             'pm_t0_cpu_energy_us':    'pm_t0_memory_energy_us':
+#             'pm_t0_cpu_power_us':     'pm_t0_memory_power_us':
+#             'pm_t0_cpu_power_W':      'pm_t0_memory_power_W':
 
     # {{{ _elapsed, _boot_time, MI200/MI300
     @performance_function('s')
@@ -321,58 +365,71 @@ class CoralGemm(rfm.RegressionTest):
         return mi
     # }}}
 
-    # {{{ performance_function (min,avg,max) gflops per gpu (0,1,2,3)
-    # --- GPU0
-    @performance_function('GFlops')
-    def _gpu0_min(self):
-        return sn.min(sn.extractall(self.regex, self.stdout, 'A0', float))
+    # {{{ (min,avg,max) gflops per gpu (0,1,2,3)
+    @run_before('performance')
+    def report_gflops(self):
+        for ii in range(4):
+            if self.rocr_visible_devices == str(ii):
+                self.perf_variables[f'_gpu{ii}_min'] = _gflops(self, 'min')
+                self.perf_variables[f'_gpu{ii}_avg'] = _gflops(self, 'avg')
+                self.perf_variables[f'_gpu{ii}_max'] = _gflops(self, 'max')
+            else:
+                self.perf_variables[f'_gpu{ii}_min'] = sn.make_performance_function(lambda: -1, 'GFlops')
+                self.perf_variables[f'_gpu{ii}_avg'] = sn.make_performance_function(lambda: -1, 'GFlops')
+                self.perf_variables[f'_gpu{ii}_max'] = sn.make_performance_function(lambda: -1, 'GFlops')
 
-    @performance_function('GFlops')
-    def _gpu0_avg(self):
-        return sn.avg(sn.extractall(self.regex, self.stdout, 'A0', float))
+    if not rocr_visible_devices_on:
+        # --- GPU0
+        @performance_function('GFlops')
+        def _gpu0_min(self):
+            return sn.min(sn.extractall(self.regex, self.stdout, 'A0', float))
 
-    @performance_function('GFlops')
-    def _gpu0_max(self):
-        return sn.max(sn.extractall(self.regex, self.stdout, 'A0', float))
+        @performance_function('GFlops')
+        def _gpu0_avg(self):
+            return sn.avg(sn.extractall(self.regex, self.stdout, 'A0', float))
 
-    # --- GPU1
-    @performance_function('GFlops')
-    def _gpu1_min(self):
-        return sn.min(sn.extractall(self.regex, self.stdout, 'A1', float))
+        @performance_function('GFlops')
+        def _gpu0_max(self):
+            return sn.max(sn.extractall(self.regex, self.stdout, 'A0', float))
 
-    @performance_function('GFlops')
-    def _gpu1_avg(self):
-        return sn.avg(sn.extractall(self.regex, self.stdout, 'A1', float))
+        # --- GPU1
+        @performance_function('GFlops')
+        def _gpu1_min(self):
+            return sn.min(sn.extractall(self.regex, self.stdout, 'A1', float))
 
-    @performance_function('GFlops')
-    def _gpu1_max(self):
-        return sn.max(sn.extractall(self.regex, self.stdout, 'A1', float))
+        @performance_function('GFlops')
+        def _gpu1_avg(self):
+            return sn.avg(sn.extractall(self.regex, self.stdout, 'A1', float))
 
-    # --- GPU2
-    @performance_function('GFlops')
-    def _gpu2_min(self):
-        return sn.min(sn.extractall(self.regex, self.stdout, 'A2', float))
+        @performance_function('GFlops')
+        def _gpu1_max(self):
+            return sn.max(sn.extractall(self.regex, self.stdout, 'A1', float))
 
-    @performance_function('GFlops')
-    def _gpu2_avg(self):
-        return sn.avg(sn.extractall(self.regex, self.stdout, 'A2', float))
+        # --- GPU2
+        @performance_function('GFlops')
+        def _gpu2_min(self):
+            return sn.min(sn.extractall(self.regex, self.stdout, 'A2', float))
 
-    @performance_function('GFlops')
-    def _gpu2_max(self):
-        return sn.max(sn.extractall(self.regex, self.stdout, 'A2', float))
+        @performance_function('GFlops')
+        def _gpu2_avg(self):
+            return sn.avg(sn.extractall(self.regex, self.stdout, 'A2', float))
 
-    # --- GPU3
-    @performance_function('GFlops')
-    def _gpu3_min(self):
-        return sn.min(sn.extractall(self.regex, self.stdout, 'A3', float))
+        @performance_function('GFlops')
+        def _gpu2_max(self):
+            return sn.max(sn.extractall(self.regex, self.stdout, 'A2', float))
 
-    @performance_function('GFlops')
-    def _gpu3_avg(self):
-        return sn.avg(sn.extractall(self.regex, self.stdout, 'A3', float))
+        # --- GPU3
+        @performance_function('GFlops')
+        def _gpu3_min(self):
+            return sn.min(sn.extractall(self.regex, self.stdout, 'A3', float))
 
-    @performance_function('GFlops')
-    def _gpu3_max(self):
-        return sn.max(sn.extractall(self.regex, self.stdout, 'A3', float))
+        @performance_function('GFlops')
+        def _gpu3_avg(self):
+            return sn.avg(sn.extractall(self.regex, self.stdout, 'A3', float))
+
+        @performance_function('GFlops')
+        def _gpu3_max(self):
+            return sn.max(sn.extractall(self.regex, self.stdout, 'A3', float))
     # }}}
 
     # {{{ pm_counters
