@@ -108,8 +108,10 @@ class RocHPL(rfm.RegressionTest, UenvSlurmMpiOptionsMixin):
     # This branch contains fixes for cmake.
     # https://github.com/ROCm/rocHPL/pull/28
     prebuild_cmds = [
-        'git clone --depth 1 --branch cmake_hip '
-        'https://github.com/rasolca/rocHPL.git'
+        # 'git clone --depth 1 --branch cmake_hip '
+        # 'https://github.com/rasolca/rocHPL.git'
+        'tar xf rocHPL.git.tgz',
+        'ln -s rocHPL.git rocHPL'
     ]
     time_limit = '10m'
     # Lower performance threshold per uarch (default: -0.1)
